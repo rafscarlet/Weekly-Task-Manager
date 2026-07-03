@@ -1,0 +1,13 @@
+<div
+    class="toast-shell flex items-center gap-2"
+    [class.toast-shell-visible]="toastService.state() !== null"
+    [class.toast-shell-success]="toastService.state() === 'success'"
+    [class.toast-shell-error]="toastService.state() === 'error'"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true">
+    <i class="material-symbols-rounded" aria-hidden="true">
+        {{ toastService.state() === 'success' ? 'check' : toastService.state() === 'error' ? 'close' : '' }}
+    </i>
+    <span>{{ toastService.message() }}</span>
+</div>

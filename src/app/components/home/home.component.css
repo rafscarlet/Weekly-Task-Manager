@@ -1,0 +1,12 @@
+
+.arrow-btn {
+  display: flex;
+  flex-direction: column;
+  :hover {
+    cursor: pointer;
+  }
+}
+
+.delete-drop-zone .cdk-drag-placeholder {
+  display: none;
+}
