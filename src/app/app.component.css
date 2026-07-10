@@ -23,33 +23,7 @@ header {
     font-weight: 700;
 }
 
-.header-copy-btn {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 1px solid rgba(248, 250, 252, 0.18);
-    background: rgba(227, 231, 235, 0.08);
-    color: #f8fafc;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 9999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 150ms ease, transform 150ms ease, border-color 150ms ease;
-}
 
-.header-copy-btn:hover {
-    cursor: pointer;
-    background: rgba(248, 250, 252, 0.16);
-    border-color: rgba(248, 250, 252, 0.32);
-    transform: translateY(-50%) scale(1.04);
-}
-
-.header-copy-btn:active {
-    transform: translateY(-50%) scale(0.98);
-}
 
 #main {
     height: calc(100vh - 5rem);

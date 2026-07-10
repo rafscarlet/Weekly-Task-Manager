@@ -1,15 +1,24 @@
 
 
-    <button
-        type="button"
-        class="header-copy-btn"
-        title="Copy this week's tasks to clipboard"
-        aria-label="Copy tasks to clipboard"
-        (click)="copyTasksToClipboard()">
-        <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
-    </button>
+<button
+    type="button"
+    class="absolute top-5 right-20 rounded-full header-btn icon-button"
+    title="Copy this week's tasks to clipboard"
+    aria-label="Copy tasks to clipboard"
+    (click)="copyTasksToClipboard()">
+    <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
+</button>
+<button
+    type="button"
+    class="absolute top-5 right-7 rounded-full header-btn icon-button"
+    title="Settings"
+    aria-label="Settings"
+    (click)="goToSettings()">
+    <span class="material-symbols-rounded" aria-hidden="true">settings</span>
+</button>
+
 <div class="mx-auto flex flex-1 w-full flex-row justify-center px-6 py-4" cdkDropListGroup>
-<button class="arrow-btn mt-18" (click)="previousWeek()"><i class="material-symbols-rounded" aria-hidden="true">arrow_back_ios</i></button>
+<button class="arrow-btn icon-button mt-18" (click)="previousWeek()"><i class="material-symbols-rounded" aria-hidden="true">arrow_back_ios</i></button>
   
   @for (day of weekDays();track $index; let last=$last;){
     <div
@@ -29,10 +38,10 @@
     <div class="mx-3 mt-3 p-3 flex items-center gap-2 text-color-accent" 
         [ngClass]="editingTaskId()? 'hover:cursor-not-allowed': 'cursor-pointer'"
         (click)="newTask(getDateKey(day))">
-      <i class="material-symbols-rounded p-1 border rounded border-(--surface)" 
+      <i class="material-symbols-rounded p-1 border rounded border-(--surface) icon-button" 
       [ngClass]="editingTaskId()? 'bg-gray-300 hover:bg-gray-300' : 'bg-blue-200 hover:bg-(--surface)'" 
       style="font-size: 18px;">add</i>
-      <p class="text-gray-500">Add task</p>
+      <p class="text-gray-500 text-sm">Add task</p>
     </div>
     @for(task of getTasksForDay((day | date: 'yyyy-MM-dd') ?? ''); track task.id) {
       <div class="mx-3" cdkDrag [cdkDragData]="task" [cdkDragDisabled]="editingTaskId() === task.id">
@@ -57,15 +66,15 @@
     (cdkDropListDropped)="onDeleteDrop($event)"
     [attr.title]="deleteDropActive() ? 'Release to delete task' : 'Drag here to delete task'">
   <i class="text-(--surface) p-4 material-symbols-rounded transition-all duration-150" 
-    [ngClass]="deleteDropActive() ? 'bg-red-700 ring-4 ring-red-200 scale-110 hover:cursor-grabbing' : 'bg-red-600 border-2 border-white hover:cursor-help'"
+    [ngClass]="deleteDropActive() ? 'bg-red-800 ring-4 ring-red-200 scale-110 hover:cursor-grabbing' : 'bg-red-700 border-2 border-white hover:cursor-help'"
     style="font-size: 2.5rem; border-radius: 50%;"
     >delete</i>
 </div>
 </div>
 
 <div
-  class="fixed bottom-4 right-4 transition-all duration-300 ease-in-out"
-  [ngClass]="visibleWeekContainsToday() ? 'pointer-events-none translate-y-2 scale-95 opacity-0' : 'translate-y-0 scale-100 opacity-100'">
+  class="fixed bottom-4 right-4 "
+  [ngClass]="visibleWeekContainsToday() ? 'pointer-events-none opacity-0' : 'opacity-100'">
   <button
     class="py-3 px-4 bg-blue-200 rounded-lg border-[5px] border-double border-blue-900 flex items-center gap-3 shadow-[0_14px_32px_rgba(15,23,42,0.35)] hover:bg-blue-300 hover:cursor-pointer"
     (click)="goToToday()">
@@ -80,7 +89,7 @@
   </ng-template>
 
   <ng-template #taskTemplate let-task>
-        <div class="relative group w-full flex flex-row items-center gap-5 rounded-lg p-3 border-b border-(--border) overflow-visible task-card transition-all duration-150"
+        <div class="relative group w-full flex flex-row items-center gap-2 rounded-lg p-3 border-b border-(--border) overflow-visible task-card transition-all duration-150"
           [class.bg-blue-100]="editingTaskId() === task.id"
           [class.opacity-50]="editingTaskId() !== task.id && editingTaskId() !== null"
           [class.ring-2]="editingTaskId() === task.id"
@@ -91,8 +100,8 @@
           @if (editingTaskId() === task.id) {
             <form 
               #editForm 
-              (submit)="saveForm($event, task.id, task.date, title.value, description.value, completed.checked, deadlineDate.value)"
-              class="relative flex flex-col gap-3 w-full">
+              (submit)="saveForm($event, task.id, task.date, title.value, description.value, (tagSelect.value), completed.checked, deadlineDate.value)"
+              class="relative flex flex-col gap-2 w-full">
               <div class="flex flex-row items-center gap-2 w-full">
                 <input type="checkbox" #completed [checked]="task.completed" class="round-checkbox" />
                 <div class="flex flex-col flex-1">
@@ -100,17 +109,24 @@
                       [id]="'task-title-' + task.id"
                       #title
                       placeholder="Name" 
-                      class="w-full text-sm bg-transparent border-b border-(--border) focus:outline-none focus:border-blue-200"
+                      class="w-full text-sm bg-transparent border-b border-gray-300 focus:outline-none focus:border-blue-200"
                       [value]="editTitle()"
                        />
                   <input type="text" 
                       #description
                       placeholder="Description" 
                       [value]="editDescription()"
-                      class="w-full text-xs bg-transparent border-b border-(--border) focus:outline-none focus:border-blue-200" />
+                      class="w-full text-xs bg-transparent border-b border-gray-300 focus:outline-none focus:border-blue-200" 
+                      />
                 </div>
+                <select #tagSelect name="tag" class='text-sm'>
+                    <option [value]="undefined" class='text-sm'>None</option>
+                    @for(tag of tags(); track tag.id) {
+                      <option [value]="tag.id" class='text-sm'>{{tag.name}}</option>
+                    }
+                </select>
                 <div class="flex flex-col justify-center" [ngClass]="task.deadline?'text-red-500' :'text-gray-400'">
-                  <button type="button" class="material-icons-rounded hover:pointer" (click)="toggleDeadlinePicker($event, task.id)"><i class='material-symbols-rounded'>warning</i></button>
+                  <button type="button" class=" icon-button material-icons-rounded" (click)="toggleDeadlinePicker($event, task.id)"><i class='material-symbols-rounded'>warning</i></button>
                   <p class="text-xs">{{task.deadline | date: 'dd/MM'}}</p>
                   <input
                     #deadlineDate
@@ -124,12 +140,12 @@
               <div class="flex items-center justify-end gap-2">
                 <button
                   type="submit"
-                  class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 active:scale-95">
+                  class="icon-button rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700 shadow-sm hover:bg-emerald-100">
                   Save
                 </button>
                 <button
                   type="button"
-                  class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-100 active:scale-95"
+                  class="icon-button rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-100"
                   (click)="cancelEdit()">
                   Cancel
                 </button>
@@ -139,20 +155,26 @@
           } @else {
           <button
             type="button"
-            class="absolute top-2 right-2 rounded-full border border-blue-200 bg-blue-50 p-1 opacity-0 pointer-events-none text-blue-500 shadow-sm transition duration-150 transform group-hover:opacity-100 group-hover:pointer-events-auto group-hover:scale-105 hover:bg-blue-100 hover:shadow-md active:scale-95 active:bg-blue-200"
+            class="icon-button absolute top-4 right-2 rounded-2xl flex flex-col items-center p-1 border border-blue-200 bg-blue-50 opacity-0 pointer-events-none text-blue-500 shadow-sm transition duration-150 transform group-hover:opacity-100 group-hover:pointer-events-auto group-hover:scale-105 hover:bg-blue-100 hover:shadow-md active:scale-95 active:bg-blue-200"
             [class.hidden]="editingTaskId() !== null"
             (click)="startEdit(task)"
             [attr.title]="'Edit Task'">
-            <span class="material-symbols-rounded">edit</span>
+            <span class="material-symbols-rounded" style="font-size: 1rem">edit</span>
           </button>
           <input type="checkbox" [checked]="task.completed" (change)="toggleTaskCompleted(task)" class="round-checkbox" />
-            <span class="">
+            <span>
             <span class="flex items-center gap-2">
             <h1 class="font-semibold text-primary text-sm truncate"
               [ngClass]="task.completed? 'line-through text-gray-500' :''"
             >
               {{ task.title }} 
               </h1>
+
+              @if(task.tag) {
+                <span class="text-xs text-(--surface) px-2 py-1 rounded-full" [ngStyle]="{'background-color': task.tag.color}">
+                  {{ task.tag.name | uppercase | slice:0:1 }}
+                </span>
+              }
 
               @if(task.deadline) {
                 <span class="flex items-center gap-1 text-red-500 whitespace-nowrap" [attr.title]="'Deadline: ' + (task.deadline | date: 'dd/MM')">

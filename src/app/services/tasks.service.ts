@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { TagCategory } from './tag.service';
 
 export type TaskCard = {
   id: number;
@@ -7,6 +8,7 @@ export type TaskCard = {
   description: string;
   completed: boolean;
   deadline?: string;
+  tag?: TagCategory;
 };
 
 type ElectronTasksApi = {
@@ -42,20 +44,6 @@ export class TasksService {
         this._tasks.set(electronTasks);
         return;
       }
-
-      const response = await fetch('data.json');
-
-      if (!response.ok) {
-        throw new Error(`Failed to load data.json (${response.status})`);
-      }
-
-      const payload = (await response.json()) as { tasks?: TaskCard[] };
-
-      if (!payload.tasks || !Array.isArray(payload.tasks)) {
-        throw new Error('data.json is missing a tasks array');
-      }
-
-      this._tasks.set(payload.tasks);
     } catch (error) {
       throw error;
     }

@@ -12,7 +12,7 @@
   }
 
   html,
-  body {
+  body { 
     height: 100%;
     margin: 0;
     background: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
@@ -47,6 +47,35 @@
     opacity: 1;
   }
 }
+
+select {
+  background-color: var(--surface);
+  padding: 0.25rem 0.1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--purple);
+  box-shadow: 1px 1px 1px 1px rgba(37, 37, 74, 0.5);
+}
+
+
+.icon-button {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.icon-button:hover {
+  cursor: pointer;
+  transform: scale(1.1);
+}
+
+.icon-button:active {
+  transform: scale(0.98);
+  cursor: grabbing;
+}
+
 
 .input-text {
   background-color: var(--surface);
@@ -89,8 +118,8 @@
 }
 
 .round-checkbox:checked {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: #123889;
+  border-color: #224aa1;
 }
 
 .round-checkbox:checked::before {

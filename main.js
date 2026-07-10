@@ -3,7 +3,11 @@ const fs = require("fs");
 const path = require("path");
 
 let tasksCache = [];
+let tagsCache = [];
+let settingsCache = {};
 
+
+// Tasks 
 function getTasksFilePath() {
   return path.join(app.getPath("userData"), "tasks.json");
 }
@@ -32,6 +36,67 @@ ipcMain.on("tasks:save", (_event, tasks) => {
   saveTasks(Array.isArray(tasks) ? tasks : []);
 });
 
+
+// Tags
+function getTagsFilePath() {
+  return path.join(app.getPath("userData"), "tags.json");
+}
+
+function readTags() {
+  const userDataFilePath = getTagsFilePath();
+
+  if (fs.existsSync(userDataFilePath)) {
+    const payload = JSON.parse(fs.readFileSync(userDataFilePath, "utf8"));
+    return Array.isArray(payload) ? payload : payload.tags ?? [];
+  }
+    return [];
+  }
+
+function saveTags(tags = tagsCache) {
+  tagsCache = tags;
+  fs.writeFileSync(getTagsFilePath(), JSON.stringify({ tags: tagsCache }, null, 2));
+}
+
+ipcMain.handle("tags:load", () => {
+  tagsCache = readTags();
+  return tagsCache;
+});
+
+ipcMain.on("tags:save", (_event, tags) => {
+  saveTags(Array.isArray(tags) ? tags : []);
+});
+
+// Settings
+function getSettingsFilePath() {
+  return path.join(app.getPath("userData"), "settings.json");
+}
+
+function readSettings() {
+  const userDataFilePath = getSettingsFilePath();
+
+  if (fs.existsSync(userDataFilePath)) {
+    const payload = JSON.parse(fs.readFileSync(userDataFilePath, "utf8"));
+    return typeof payload === "object" && payload !== null ? payload : {};
+  }
+    return {};
+  }
+
+function saveSettings(settings = settingsCache) {
+  settingsCache = settings;
+  fs.writeFileSync(getSettingsFilePath(), JSON.stringify(settingsCache, null, 2));
+}
+
+ipcMain.handle("settings:load", () => {
+  settingsCache = readSettings();
+  return settingsCache;
+});
+
+ipcMain.on("settings:save", (_event, settings) => {
+  saveSettings(typeof settings === "object" && settings !== null ? settings : {});
+});
+
+///////
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1000,
@@ -43,10 +108,16 @@ function createWindow() {
     }
   });
 
-  app.on("before-quit", () => saveTasks());
+  app.on("before-quit", () => {
+    saveTasks()
+    saveTags();
+    saveSettings();
+  });
 
   app.on("window-all-closed", () => {
     saveTasks();
+    saveTags();
+    saveSettings();
     app.quit();
   });
 

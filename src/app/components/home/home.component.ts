@@ -3,7 +3,10 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { DateService } from '../../services/date.service';
 import { TaskCard, TasksService } from '../../services/tasks.service';
-import { ToastService } from '../toast/toast.service';
+import { ToastService } from '../../services/toast.service';
+import { Router } from '@angular/router';
+import { TagService } from '../../services/tag.service';
+import { SettingsService } from '../../services/settings.service';
 
 @Component({
   selector: 'app-home',
@@ -15,7 +18,10 @@ import { ToastService } from '../toast/toast.service';
 export class HomeComponent {
   private dateService = inject(DateService);
   private tasksService = inject(TasksService);
+  private tagService = inject(TagService);
   private toastService = inject(ToastService);
+  private settingsService = inject(SettingsService);
+  private router = inject(Router);
 
   protected readonly today = new Date().toISOString().split('T')[0];
   protected readonly loadError = signal<string | null>(null);
@@ -24,13 +30,20 @@ export class HomeComponent {
   protected readonly draftTask = signal<TaskCard | null>(null);
   protected readonly editTitle = signal('');
   protected readonly editDescription = signal('');
+  protected readonly editTagId = signal<number | undefined>(undefined);
   protected readonly editDeadline = signal('');
   protected readonly selectedWeekDate = signal(new Date())
   protected readonly deleteDropActive = signal(false);
 
   protected readonly tasks = this.tasksService.tasks;
+  protected readonly tags = this.tagService.tags;
+  protected readonly settings = this.settingsService.settings;
+
+  protected readonly showCompleted = computed(()=> this.settings().showCompleted);
+  protected readonly showDeadlineOnCopy = computed(()=> this.settings().showDeadlineOnCopy);
 
   days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
   protected readonly weekDays = computed(() => this.dateService.getWeekDates(this.selectedWeekDate())
 );
   protected readonly visibleWeekContainsToday = computed(() =>
@@ -38,10 +51,10 @@ export class HomeComponent {
   );
 
   constructor() {
-    
     effect(() => {
-      console.log('Today is:', this.today);
-      console.log('tasks:', this.tasks());
+      // console.log('Today is:', this.today);
+      // console.log('tasks:', this.tasks());
+      // console.log('tags:', this.tags());
     });
   }
 
@@ -96,6 +109,7 @@ export class HomeComponent {
     this.deadlinePickerTaskId.set(null);
     this.editTitle.set(task.title);
     this.editDescription.set(task.description);
+    this.editTagId.set(task.tag?.id);
     this.editDeadline.set(task.deadline ?? '');
 
     setTimeout(() => {
@@ -103,21 +117,10 @@ export class HomeComponent {
     });
   }
 
-  saveForm(event: Event, id: number, date: string, title: string, description: string, completed: boolean, deadline: string): void {
+  saveForm(event: Event, id: number, date: string, title: string, description: string, tagId: string, completed: boolean, deadline: string): void {
     event.preventDefault();
     event.stopPropagation();
-    this.commitEdit(id, date, title, description, completed, deadline);
-  }
-
-  onEditFocusOut(event: FocusEvent, id: number, date: string, title: string, description: string, completed: boolean, deadline: string): void {
-    const form = event.currentTarget as HTMLElement;
-    const nextFocusedElement = event.relatedTarget as Node | null;
-
-    if (nextFocusedElement && form.contains(nextFocusedElement)) {
-      return;
-    }
-
-    this.commitEdit(id, date, title, description, completed, deadline);
+    this.commitEdit(id, date, title, description, Number(tagId), completed, deadline);
   }
 
   toggleTaskCompleted(task: TaskCard): void {
@@ -130,7 +133,7 @@ export class HomeComponent {
     this.deadlinePickerTaskId.update(openTaskId => openTaskId === taskId ? null : taskId);
   }
 
-  private commitEdit(id: number, date: string, title: string, description: string, completed: boolean, deadline: string): void {
+  private commitEdit(id: number, date: string, title: string, description: string, tagId: number, completed: boolean, deadline: string): void {
     if (this.editingTaskId() !== id) {
       return;
     }
@@ -140,6 +143,7 @@ export class HomeComponent {
 
     const nextTitle = title.trim();
     const nextDescription = description.trim();
+    const nextTag = this.tags().find(tag => tag.id === tagId) || undefined
     const nextDeadline = deadline.trim();
 
     if (!nextTitle && !nextDescription) {
@@ -163,15 +167,16 @@ export class HomeComponent {
       title: nextTitle || `Task #${id}`,
       description: nextDescription,
       completed,
+      tag: nextTag,
       deadline: nextDeadline || undefined
     };
 
     if (isDraftTask) {
       this.tasksService.addTask({ ...draftTask, ...taskChanges });
-      this.toastService.showSuccess('Task created');
+      this.toastService.showSuccess('Task created!');
     } else {
       this.tasksService.updateTask(id, taskChanges);
-      this.toastService.showSuccess('Task saved');
+      this.toastService.showSuccess('Task saved!');
     }
 
     this.cancelEdit();
@@ -199,6 +204,7 @@ export class HomeComponent {
     this.draftTask.set(null);
     this.editTitle.set('');
     this.editDescription.set('');
+    this.editTagId.set(undefined);
     this.editDeadline.set('');
   }
 
@@ -216,7 +222,6 @@ export class HomeComponent {
   protected setDeleteDropActive(active: boolean): void {
     this.deleteDropActive.set(active);
   }
-
 
   
   async copyTasksToClipboard(): Promise<void> {
@@ -264,12 +269,17 @@ export class HomeComponent {
       }
 
       const label = formatDate(day, 'EEEE, MMMM d', 'en-US');
-      const line = tasks.map(task => `${task.completed? ' [✓]': '[   ]'} - ${task.title} ${task.description ? `: ${task.description}` : ''} ${task.deadline ? ` (Deadline: ${task.deadline})` : ''}`).join('\n');
+      const line = tasks.map(task => 
+        `${task.completed? ' [✓]': '[   ]'} - ${task.tag ? '[' + task.tag.name + ']': ''} ${task.title} ${task.description ? `: ${task.description}` : ''} ${task.deadline && this.showDeadlineOnCopy() ? ` (Deadline: ${task.deadline})` : ''}`).join('\n');
 
       return `${label}\n${line}\n`;
     }).filter(Boolean).join('\n\n')  
 
   return text + body;
+  }
+
+  goToSettings(): void {
+    this.router.navigate(['/settings']);
   }
 
 }

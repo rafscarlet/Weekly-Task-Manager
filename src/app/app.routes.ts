@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './components/home/home.component';
-import { Config } from './components/config/config';
+import { SettingsPage } from './components/settings-page/settings-page';
 
 export const appRoutes: Routes = [
-  { path: 'config', component: HomeComponent },
-  { path: '', component: Config
+  { path: 'home', component: HomeComponent },
+  { path: 'settings', component: SettingsPage
    },
-  { path: '**', redirectTo: 'config' }
+  { path: '**', redirectTo: 'home' }
 ];
