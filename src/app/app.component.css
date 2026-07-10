@@ -3,13 +3,14 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #304178;
-    color: #f8fafc;
+
+    background-color: rgb(var(--primary));
+    color: rgb(var(--on-primary));
+
     padding: 1rem;
     text-align: center;
     height: 5rem;
 }
-
 
 .app-header {
     position: relative;
@@ -19,11 +20,12 @@ header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+
     font-size: 1.5rem;
     font-weight: 700;
+
+    color: rgb(var(--on-primary));
 }
-
-
 
 #main {
     height: calc(100vh - 5rem);

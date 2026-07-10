@@ -48,7 +48,8 @@ export class SettingsPage {
     event.preventDefault();
     this.tagService.saveTags(this.tags());
     this.settingsService.updateSettings((settings) => settings);
-    this.toastService.showSuccess('Settings saved successfully!');
+    this.toastService.showSuccess('Settings saved successfully!'); // to fix notifications!
+    this.goBack();
   }
 
   goBack() {

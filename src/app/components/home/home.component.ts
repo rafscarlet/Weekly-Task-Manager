@@ -7,11 +7,12 @@ import { ToastService } from '../../services/toast.service';
 import { Router } from '@angular/router';
 import { TagService } from '../../services/tag.service';
 import { SettingsService } from '../../services/settings.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, DragDropModule],
+  imports: [CommonModule, DragDropModule, FormsModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
@@ -59,7 +60,7 @@ export class HomeComponent {
   }
 
   getTasksForDay(date: string): TaskCard[] {
-    const tasks = this.tasks().filter(task => task.date === date);
+    const tasks = this.tasks().filter(task => task.date === date && (this.showCompleted() || !task.completed));
     const draftTask = this.draftTask();
 
     return draftTask?.date === date ? [...tasks, draftTask] : tasks;

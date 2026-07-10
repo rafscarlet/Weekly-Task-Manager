@@ -1,131 +1,185 @@
 @import "tailwindcss";
+@theme {
+  --color-bg: rgb(var(--bg));
+
+  --color-surface: rgb(var(--surface));
+  --color-surface-hover: rgb(var(--surface-hover));
+
+  --color-text: rgb(var(--text));
+  --color-text-secondary: rgb(var(--text-secondary));
+  --color-text-disabled: rgb(var(--text-disabled));
+
+  --color-border: rgb(var(--border));
+
+  --color-primary: rgb(var(--primary));
+  --color-primary-hover: rgb(var(--primary-hover));
+  --color-on-primary: rgb(var(--on-primary));
+
+  --color-success: rgb(var(--success));
+  --color-success-hover: rgb(var(--success-hover));
+  --color-on-success: rgb(var(--on-success));
+
+  --color-warning: rgb(var(--warning));
+  --color-warning-hover: rgb(var(--warning-hover));
+  --color-on-warning: rgb(var(--on-warning));
+
+  --color-danger: rgb(var(--danger));
+  --color-danger-hover: rgb(var(--danger-hover));
+  --color-on-danger: rgb(var(--on-danger));
+
+  --color-neutral: rgb(var(--neutral));
+  --color-neutral-hover: rgb(var(--neutral-hover));
+  --color-on-neutral: rgb(var(--on-neutral));
+}
+
+:root {
+  /* App surfaces */
+  --bg: 248 250 252;                  /* page background */
+  --surface: 255 255 255;             /* cards, dropdowns, modals */
+  --surface-hover: 241 245 249;       /* hover states */
+
+  /* Text */
+  --text: 15 23 42;                   /* primary text */
+  --text-secondary: 100 116 139;      /* muted text */
+  --text-disabled: 148 163 184;       /* disabled text */
+
+  /* Borders */
+  --border: 226 232 240;
+
+  /* Brand */
+  --primary: 79 70 229;               /* indigo */
+  --primary-hover: 67 56 202;
+  --on-primary: 255 255 255;
+
+  /* Status */
+  --success: 16 185 129;
+  --success-hover: 5 150 105;
+  --on-success: 255 255 255;
+
+  --warning: 245 158 11;
+  --warning-hover: 217 119 6;
+  --on-warning: 15 23 42;
+
+  --danger: 239 68 68;
+  --danger-hover: 220 38 38;
+  --on-danger: 255 255 255;
+
+  /* Neutral actions */
+  --neutral: 241 245 249;
+  --neutral-hover: 226 232 240;
+  --on-neutral: 15 23 42;
+}
 
 @layer base {
-  :root {
-    --bg-start: #f7f5ff;
-    --bg-end: #eef0ff;
-    --text: #1f1b2e;
-    --purple: #5b21b6;
-    --slate: #475569;
-    --surface: #ffffff;
-    --border: #e2e8f0;
-  }
-
   html,
-  body { 
+  body {
     height: 100%;
     margin: 0;
-    background: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
-    color: var(--text);
+    background: rgb(var(--bg));
+    color: rgb(var(--text));
+  }
+
+  *,
+  *::before,
+  *::after {
+    border-color: rgb(var(--border));
   }
 }
 
-@layer utilities {
-  .text-primary {
-    color: var(--text);
-  }
 
-  .text-accent {
-    color: var(--slate);
-  }
-
-  .text-purple {
-    color: var(--purple);
-  }
+@layer components {
 
   .task-card {
     cursor: grab;
   }
 
+
+  .icon-button {
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .icon-button:hover {
+    cursor: pointer;
+    transform: scale(1.1);
+  }
+
+  .icon-button:active {
+    transform: scale(0.98);
+    cursor: grabbing;
+  }
+
+
+  .input-text {
+    background-color: rgb(var(--surface));
+    color: rgb(var(--text));
+
+    width: 100%;
+    padding: 0.5rem;
+
+    border: 1px solid rgb(var(--border));
+    border-radius: 0.25rem;
+  }
+
+  .round-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+
+    width: 1.3rem;
+    height: 1.3rem;
+
+    border-radius: 9999px;
+    border: 2px solid rgb(var(--text-disabled));
+    background-color: rgb(var(--surface));
+
+    display: inline-grid;
+    place-content: center;
+
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      transform 150ms ease;
+  }
+
+  .round-checkbox::before {
+    content: "";
+
+    width: 0.3rem;
+    height: 0.6rem;
+
+    border-right: 2px solid rgb(var(--on-primary));
+    border-bottom: 2px solid rgb(var(--on-primary));
+
+    transform: rotate(45deg) scale(0);
+    transition: transform 150ms ease;
+  }
+
+  .round-checkbox:checked {
+    background-color: rgb(var(--primary));
+    border-color: rgb(var(--primary));
+  }
+
+  .round-checkbox:checked::before {
+    transform: rotate(45deg) scale(1);
+  }
+
+  .round-checkbox:hover {
+    cursor: pointer;
+  }
+
+}
+
+
+@layer utilities {
+
   .cdk-drag-preview {
-    opacity: 1;
-    border-radius: 0.75rem;
-    background: var(--surface);
+    background: rgb(var(--surface));
+    color: rgb(var(--text));
+    border: 1px solid rgb(var(--border));
+    box-shadow: 0 10px 30px rgb(var(--text) / 0.12);
   }
 
   .cdk-drag-placeholder {
     opacity: 1;
   }
-}
 
-select {
-  background-color: var(--surface);
-  padding: 0.25rem 0.1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-}
-
-select:focus {
-  outline: none;
-  border-color: var(--purple);
-  box-shadow: 1px 1px 1px 1px rgba(37, 37, 74, 0.5);
-}
-
-
-.icon-button {
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.icon-button:hover {
-  cursor: pointer;
-  transform: scale(1.1);
-}
-
-.icon-button:active {
-  transform: scale(0.98);
-  cursor: grabbing;
-}
-
-
-.input-text {
-  background-color: var(--surface);
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 0.25rem;
-}
-
-.input-text:focus {
-  outline: none;
-  border-color: var(--purple);
-  box-shadow: 1px 1px 3px 1px rgba(10, 10, 100, 0.5);
-}
-
-.round-checkbox {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 1.3rem;
-  height: 1.3rem;
-  border-radius: 9999px;
-  border: 2px solid #94a3b8;
-  background-color: #fff;
-  display: inline-grid;
-  place-content: center;
-  transition:
-    background-color 150ms ease,
-    border-color 150ms ease,
-    transform 150ms ease;
-}
-
-.round-checkbox::before {
-  content: "";
-  width: 0.3rem;
-  height: 0.6rem;
-  border-right: 2px solid white;
-  border-bottom: 2px solid white;
-  transform: rotate(45deg) scale(0);
-  transition: transform 150ms ease;
-}
-
-.round-checkbox:checked {
-  background-color: #123889;
-  border-color: #224aa1;
-}
-
-.round-checkbox:checked::before {
-  transform: rotate(45deg) scale(1);
-}
-
-.round-checkbox:hover {
-  cursor: pointer;
 }
