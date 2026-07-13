@@ -1,15 +1,7 @@
-import { Injectable, signal } from '@angular/core';
-import { TagCategory } from './tag.service';
+import { inject, Injectable, signal } from '@angular/core';
+import { TaskCard } from '../types/all-types';
+import { ToastService } from './toast.service';
 
-export type TaskCard = {
-  id: number;
-  date: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  deadline?: string;
-  tag?: TagCategory;
-};
 
 type ElectronTasksApi = {
   loadTasks: () => Promise<TaskCard[] | null>;
@@ -26,6 +18,7 @@ declare global {
   providedIn: 'root',
 })
 export class TasksService {
+  private toastService = inject(ToastService);
   private readonly _tasks = signal<TaskCard[]>([]);
 
   constructor() {
@@ -51,6 +44,7 @@ export class TasksService {
 
   addTask(task: TaskCard): void {
     this.updateTasks(tasks => [...tasks, task]);
+    this.toastService.showSuccess('Task created!');
   }
 
   updateTask(id: number, changes: Partial<Omit<TaskCard, 'id'>>): void {
@@ -59,6 +53,7 @@ export class TasksService {
         task.id === id ? { ...task, ...changes } : task
       )
     );
+    this.toastService.showSuccess('Task updated!');
   }
 
   deleteTask(id: number): void {

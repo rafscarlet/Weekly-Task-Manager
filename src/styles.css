@@ -70,6 +70,51 @@
   --on-neutral: 15 23 42;
 }
 
+.dark {
+  /* App surfaces */
+  --bg: 15 23 42;                    /* slate-900 */
+  --surface: 30 41 59;               /* slate-800 */
+  --surface-hover: 51 65 85;         /* slate-700 */
+
+
+  /* Text */
+  --text: 241 245 249;               /* slate-100 */
+  --text-secondary: 148 163 184;     /* slate-400 */
+  --text-disabled: 100 116 139;      /* slate-500 */
+
+
+  /* Borders */
+  --border: 71 85 105;               /* slate-600 */
+
+
+  /* Brand */
+  --primary: 129 140 248;             /* indigo-400 */
+  --primary-hover: 165 180 252;       /* indigo-300 */
+  --on-primary: 15 23 42;
+
+
+  /* Status */
+  --success: 52 211 153;              /* emerald-400 */
+  --success-hover: 110 231 183;        /* emerald-300 */
+  --on-success: 6 78 59;
+
+
+  --warning: 251 191 36;              /* amber-400 */
+  --warning-hover: 252 211 77;        /* amber-300 */
+  --on-warning: 69 26 3;
+
+
+  --danger: 248 113 113;              /* red-400 */
+  --danger-hover: 252 165 165;        /* red-300 */
+  --on-danger: 69 10 10;
+
+
+  /* Neutral actions */
+  --neutral: 51 65 85;                /* slate-700 */
+  --neutral-hover: 71 85 105;         /* slate-600 */
+  --on-neutral: 241 245 249;
+}
+
 @layer base {
   html,
   body {
@@ -167,7 +212,6 @@
   }
 
 }
-
 
 @layer utilities {
 

@@ -1,13 +1,10 @@
 import { Injectable, signal } from '@angular/core';
-
-export type Settings = {
-  showCompleted : boolean;
-  showDeadlineOnCopy: boolean;
-}
+import { Settings } from '../types/all-types';
 
 const DEFAULT_SETTINGS: Settings = {
   showCompleted: true,
   showDeadlineOnCopy: false,
+  darkMode: false
 };
 
 type ElectronSettingsApi = {

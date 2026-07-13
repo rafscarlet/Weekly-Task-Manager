@@ -2,12 +2,14 @@ import { CommonModule, formatDate } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { DateService } from '../../services/date.service';
-import { TaskCard, TasksService } from '../../services/tasks.service';
+import { TasksService } from '../../services/tasks.service';
+import { TaskCard } from '../../types/all-types';
 import { ToastService } from '../../services/toast.service';
 import { Router } from '@angular/router';
 import { TagService } from '../../services/tag.service';
 import { SettingsService } from '../../services/settings.service';
 import { FormsModule } from '@angular/forms';
+import { formatTasksForClipboard } from '../../helpers/clipboard.helper';
 
 @Component({
   selector: 'app-home',
@@ -56,6 +58,7 @@ export class HomeComponent {
       // console.log('Today is:', this.today);
       // console.log('tasks:', this.tasks());
       // console.log('tags:', this.tags());
+      // console.log('settings:', this.settings());
     });
   }
 
@@ -174,10 +177,8 @@ export class HomeComponent {
 
     if (isDraftTask) {
       this.tasksService.addTask({ ...draftTask, ...taskChanges });
-      this.toastService.showSuccess('Task created!');
     } else {
       this.tasksService.updateTask(id, taskChanges);
-      this.toastService.showSuccess('Task saved!');
     }
 
     this.cancelEdit();
@@ -226,7 +227,7 @@ export class HomeComponent {
 
   
   async copyTasksToClipboard(): Promise<void> {
-    const tasksJson = this.formatTasksForClipboard();
+    const tasksJson = formatTasksForClipboard(this.tasks(), this.weekDays(), this.showDeadlineOnCopy());
 
     try {
       if (!navigator.clipboard?.writeText) {
@@ -239,44 +240,6 @@ export class HomeComponent {
       console.error('Failed to copy tasks to clipboard', error);
       this.toastService.showError('Failed to copy tasks!');
     }
-  }
-
-
-  formatTasksForClipboard(): string {
-    const weekDays = this.dateService.getWeekDates(new Date());
-    const weekKeys = weekDays.map(day => formatDate(day, 'yyyy-MM-dd', 'en-US'));
-
-    const grouped = this.tasksService.tasks()
-      .filter(task => weekKeys.includes(task.date))
-      .reduce((groups, task) => {
-        (groups[task.date] ??=[]).push(task);
-        return groups;
-      }, {} as Record<string, TaskCard[]>);
-
-    const hasAnyTasks = Object.values(grouped).some(tasks => tasks.length > 0);
-
-    if (!hasAnyTasks) {
-      return 'No tasks documented.';
-    }
-
-    const text = `Tasks for week ${formatDate(weekDays[0], 'MMMM d, yyyy', 'en-US')} to ${formatDate(weekDays[4], 'MMMM d, yyyy', 'en-US')}:\n\n`;
-
-    const body =  weekDays.map(day => {
-      const key = formatDate(day, 'yyyy-MM-dd', 'en-US');
-      const tasks = grouped[key] ?? [];
-
-      if (!tasks.length) {
-        return '';
-      }
-
-      const label = formatDate(day, 'EEEE, MMMM d', 'en-US');
-      const line = tasks.map(task => 
-        `${task.completed? ' [✓]': '[   ]'} - ${task.tag ? '[' + task.tag.name + ']': ''} ${task.title} ${task.description ? `: ${task.description}` : ''} ${task.deadline && this.showDeadlineOnCopy() ? ` (Deadline: ${task.deadline})` : ''}`).join('\n');
-
-      return `${label}\n${line}\n`;
-    }).filter(Boolean).join('\n\n')  
-
-  return text + body;
   }
 
   goToSettings(): void {

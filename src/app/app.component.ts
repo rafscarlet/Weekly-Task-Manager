@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ToastComponent } from './components/toast/toast';
+import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -10,4 +11,5 @@ import { ToastComponent } from './components/toast/toast';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+  private themeService = inject(ThemeService);
 }

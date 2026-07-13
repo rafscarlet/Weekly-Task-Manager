@@ -1,5 +1,5 @@
 <button type="button" class="absolute top-5 right-20 rounded-full header-btn icon-button"
-  title="Copy this week's tasks to clipboard" aria-label="Copy tasks to clipboard" (click)="copyTasksToClipboard()">
+  title="Copy weekly tasks to clipboard" aria-label="Copy tasks to clipboard" (click)="copyTasksToClipboard()">
   <span class="material-symbols-rounded" aria-hidden="true">content_copy</span>
 </button>
 
@@ -38,14 +38,15 @@
       </p>
     </div>
 
-    <div class="mx-3 mt-3 p-3 flex items-center gap-2 text-text-secondary border-b border-border" [ngClass]="
-          editingTaskId() ? 'hover:cursor-not-allowed' : 'cursor-pointer'
-        " (click)="newTask(getDateKey(day))">
-      <i class="material-symbols-rounded p-1 border rounded border-border icon-button" [ngClass]="
+    <div class="mx-3 mt-3 p-3 flex items-center gap-2 text-text-secondary border-b border-border" 
+          [ngClass]="editingTaskId() ? 'hover:cursor-not-allowed' : 'cursor-pointer'" 
+          (click)="newTask(getDateKey(day))">
+      <i class="material-symbols-rounded p-1 border rounded border-border icon-button" 
+          [ngClass]="
             editingTaskId()
               ? 'bg-surface-hover hover:bg-surface-hover'
-              : 'bg-surface-hover hover:bg-surface'
-          " style="font-size: 18px">
+              : 'bg-surface-hover hover:bg-primary-hover text-primary hover:text-on-primary'" 
+              style="font-size: 18px">
         add
       </i>
 
@@ -178,7 +179,9 @@
     } @else {
     <button type="button"
       class="icon-button absolute top-4 right-2 rounded-3xl flex flex-col items-center p-2 border border-primary bg-surface opacity-0 pointer-events-none text-primary shadow-sm transition duration-150 transform group-hover:opacity-100 group-hover:pointer-events-auto group-hover:scale-105 hover:bg-surface-hover hover:shadow-md active:scale-95"
-      [class.hidden]="editingTaskId() !== null" (click)="startEdit(task)" [attr.title]="'Edit Task'">
+      [class.hidden]="editingTaskId() !== null" 
+      (click)="startEdit(task)" 
+      [attr.title]="'Edit Task'">
       <span class="material-symbols-rounded" style="font-size: 1rem">
         edit
       </span>
