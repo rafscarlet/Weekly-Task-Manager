@@ -9,9 +9,7 @@
 </button>
 
 <div class="mx-auto flex flex-1 w-full flex-row justify-center px-6 py-4" cdkDropListGroup>
-  <button class="arrow-btn icon-button mt-18" (click)="previousWeek()">
-    <i class="material-symbols-rounded" aria-hidden="true">arrow_back_ios</i>
-  </button>
+  <ng-container *ngTemplateOutlet="arrowButtonTemplate; context: { direction: 'previous' }"></ng-container>
 
   @for (day of weekDays(); track $index; let last = $last) {
   <div class="flex flex-col flex-1 h-150 overflow-hidden" cdkDropList
@@ -57,7 +55,12 @@
     task of getTasksForDay((day | date: "yyyy-MM-dd") ?? "");
     track task.id
     ) {
-    <div class="mx-3" cdkDrag [cdkDragData]="task" [cdkDragDisabled]="editingTaskId() === task.id">
+    <div 
+      class="mx-3" 
+      cdkDrag 
+      [cdkDragData]="task" 
+      [cdkDragDisabled]="editingTaskId() === task.id"
+      >
       <ng-container *ngTemplateOutlet="taskTemplate; context: { $implicit: task }">
       </ng-container>
     </div>
@@ -69,11 +72,7 @@
   }
   }
 
-  <button class="arrow-btn icon-button mt-18" (click)="nextWeek()">
-    <i class="material-symbols-rounded" aria-hidden="true">
-      arrow_forward_ios
-    </i>
-  </button>
+  <ng-container *ngTemplateOutlet="arrowButtonTemplate; context: { direction: 'next' }"></ng-container>
 
   <div class="delete-drop-zone fixed bottom-5 left-5 z-30" cdkDropList [cdkDropListSortingDisabled]="true"
     [cdkDropListData]="'delete'" (cdkDropListEntered)="setDeleteDropActive(true)"
@@ -99,6 +98,9 @@
     <span class="font-semibold text-text"> Go to Today </span>
   </button>
 </div>
+
+
+
 <ng-template #taskTemplate let-task>
   <div
     class="relative group w-full flex flex-row items-center gap-2 rounded-xl p-3 border-b border-border overflow-visible task-card transition-all duration-150"
@@ -149,7 +151,7 @@
         </select>
 
         <div class="flex flex-col justify-center" [ngClass]="task.deadline ? 'text-danger' : 'text-text-secondary'">
-          <button type="button" class="icon-button material-icons-rounded">
+          <button type="button" class="icon-button" (click)="toggleDeadlinePicker($event, task.id)" [attr.title]="task.deadline ? 'Edit Deadline' : 'Set Deadline'">
             <i class="material-symbols-rounded"> warning </i>
           </button>
 
@@ -159,7 +161,7 @@
 
           <input #deadlineDate type="date" [value]="editDeadline()"
             class="absolute right-0 top-8 z-20 rounded-lg border border-border bg-surface text-text p-2 text-sm shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)]"
-            [class.hidden]="deadlinePickerTaskId() !== task.id" (click)="$event.stopPropagation()" />
+            [class.hidden]="deadlinePickerTaskId() !== task.id" />
         </div>
       </div>
 
@@ -218,4 +220,10 @@
     </span>
     }
   </div>
+</ng-template>
+
+<ng-template #arrowButtonTemplate let-direction="direction">
+    <button class="arrow-btn icon-button mt-18" (click)="navigateWeek(direction)">
+    <i class="material-symbols-rounded" aria-hidden="true">{{direction === 'previous'? 'arrow_back_ios' : 'arrow_forward_ios'}}</i>
+  </button>
 </ng-template>

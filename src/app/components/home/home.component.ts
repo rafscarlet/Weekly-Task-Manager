@@ -69,62 +69,23 @@ export class HomeComponent {
     return draftTask?.date === date ? [...tasks, draftTask] : tasks;
   }
 
-  protected previousWeek(): void {
+  navigateWeek(direction: 'previous' | 'next'): void {
     this.selectedWeekDate.update(date => {
-      const next = new Date(date);
-      next.setDate(next.getDate() - 7);
-      return next;
-    })
-  }
+      const target = new Date(date);
+      target.setDate(target.getDate() + (direction === 'next' ? 7 : -7));
+      return target;
+    });
 
-  protected nextWeek(): void {
-    this.selectedWeekDate.update(date => {
-      const next = new Date(date);
-      next.setDate(next.getDate() + 7);
-      return next;
-    })
+    this.cancelEdit();
   }
 
   protected goToToday(): void {
     this.selectedWeekDate.set(new Date());
+    this.cancelEdit();
   }
 
   protected getDateKey(date: string | number | Date): string {
     return formatDate(date, 'yyyy-MM-dd', 'en-US');
-  }
-
-  onTaskDrop(event: CdkDragDrop<string>): void {
-    const task = event.item.data as TaskCard | undefined;
-    const targetDate = event.container.data;
-
-    if (!task || !targetDate) {
-      return;
-    }
-
-    if (task.date === targetDate) {
-      return;
-    }
-
-    this.tasksService.updateTask(task.id, { date: targetDate });
-  }
-
-  protected startEdit(task: TaskCard): void {
-    this.editingTaskId.set(task.id);
-    this.deadlinePickerTaskId.set(null);
-    this.editTitle.set(task.title);
-    this.editDescription.set(task.description);
-    this.editTagId.set(task.tag?.id);
-    this.editDeadline.set(task.deadline ?? '');
-
-    setTimeout(() => {
-      document.getElementById(`task-title-${task.id}`)?.focus();
-    });
-  }
-
-  saveForm(event: Event, id: number, date: string, title: string, description: string, tagId: string, completed: boolean, deadline: string): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.commitEdit(id, date, title, description, Number(tagId), completed, deadline);
   }
 
   toggleTaskCompleted(task: TaskCard): void {
@@ -134,9 +95,13 @@ export class HomeComponent {
   protected toggleDeadlinePicker(event: Event, taskId: number): void {
     event.preventDefault();
     event.stopPropagation();
-    this.deadlinePickerTaskId.update(openTaskId => openTaskId === taskId ? null : taskId);
+
+    this.deadlinePickerTaskId.update(openTaskId =>
+      openTaskId === taskId ? null : taskId
+    );
   }
 
+  
   private commitEdit(id: number, date: string, title: string, description: string, tagId: number, completed: boolean, deadline: string): void {
     if (this.editingTaskId() !== id) {
       return;
@@ -183,6 +148,26 @@ export class HomeComponent {
 
     this.cancelEdit();
   }
+  
+  protected startEdit(task: TaskCard): void {
+    this.editingTaskId.set(task.id);
+    this.deadlinePickerTaskId.set(null);
+    this.editTitle.set(task.title);
+    this.editDescription.set(task.description);
+    this.editTagId.set(task.tag?.id);
+    this.editDeadline.set(task.deadline ?? '');
+
+    setTimeout(() => {
+      document.getElementById(`task-title-${task.id}`)?.focus();
+    });
+  }
+
+  saveForm(event: Event, id: number, date: string, title: string, description: string, tagId: string, completed: boolean, deadline: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.commitEdit(id, date, title, description, Number(tagId), completed, deadline);
+  }
+
 
   newTask(date: string): void {
     if (this.editingTaskId()) {
@@ -209,6 +194,22 @@ export class HomeComponent {
     this.editTagId.set(undefined);
     this.editDeadline.set('');
   }
+
+    onTaskDrop(event: CdkDragDrop<string>): void {
+    const task = event.item.data as TaskCard | undefined;
+    const targetDate = event.container.data;
+
+    if (!task || !targetDate) {
+      return;
+    }
+
+    if (task.date === targetDate) {
+      return;
+    }
+
+    this.tasksService.updateTask(task.id, { date: targetDate });
+  }
+
 
   onDeleteDrop(event: CdkDragDrop<string>): void {
     const task = event.item.data as TaskCard | undefined;
@@ -243,6 +244,7 @@ export class HomeComponent {
   }
 
   goToSettings(): void {
+    this.cancelEdit();
     this.router.navigate(['/settings']);
   }
 
