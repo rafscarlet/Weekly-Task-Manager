@@ -182,12 +182,62 @@
     <button type="button"
       class="icon-button absolute top-4 right-2 rounded-3xl flex flex-col items-center p-2 border border-primary bg-surface opacity-0 pointer-events-none text-primary shadow-sm transition duration-150 transform group-hover:opacity-100 group-hover:pointer-events-auto group-hover:scale-105 hover:bg-surface-hover hover:shadow-md active:scale-95"
       [class.hidden]="editingTaskId() !== null" 
-      (click)="startEdit(task)" 
-      [attr.title]="'Edit Task'">
+      (click)="toggleTaskMenu($event, task)" 
+      [attr.title]="'Options'">
       <span class="material-symbols-rounded" style="font-size: 1rem">
-        edit
+        more_vert
       </span>
     </button>
+    @if(openTaskMenuId() === task.id) {
+    <div
+      class="absolute right-0 top-12 z-50 w-48 rounded-lg border border-border
+            bg-surface shadow-lg overflow-hidden"
+      (click)="$event.stopPropagation()">
+
+      <button
+        class="w-full px-3 py-2 text-left text-sm hover:bg-surface-hover"
+        (click)="editFromMenu(task)">
+        <span class="material-symbols-rounded align-middle text-sm" style="font-size: 15px;">
+          edit
+        </span>
+        Edit
+      </button>
+      
+      <button
+        class="w-full px-3 py-2 text-left text-sm hover:bg-surface-hover"
+        (click)="moveTaskToWeek(task, 'previous')">
+        <span class="material-symbols-rounded align-middle text-sm" style="font-size: 15px;">
+          arrow_left_alt
+        </span>
+        Move to Previous Week
+      </button>
+      <button
+        class="w-full px-3 py-2 text-left text-sm hover:bg-surface-hover"
+        (click)="moveTaskToWeek(task, 'next')">
+        <span class="material-symbols-rounded align-middle text-sm" style="font-size: 15px;">
+          arrow_right_alt
+        </span>
+        Move to Next Week
+      </button>
+      <button
+        class="w-full px-3 py-2 text-left text-sm hover:bg-surface-hover">
+        <span class="material-symbols-rounded align-middle text-sm" style="font-size: 15px;">
+          swap_horiz
+        </span>
+        Move to Date
+      </button>
+
+      <button
+        class="w-full px-3 py-2 text-left text-sm text-danger hover:bg-surface-hover"
+        (click)="deleteFromMenu(task)">
+        <span class="material-symbols-rounded align-middle text-sm">
+          delete
+        </span>
+        Delete
+      </button>
+
+    </div>
+    }
 
     <input type="checkbox" [checked]="task.completed" (change)="toggleTaskCompleted(task)" class="round-checkbox" />
 

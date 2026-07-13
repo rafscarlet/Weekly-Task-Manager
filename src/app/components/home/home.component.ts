@@ -1,5 +1,5 @@
 import { CommonModule, formatDate } from '@angular/common';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, HostListener, inject, signal } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { DateService } from '../../services/date.service';
 import { TasksService } from '../../services/tasks.service';
@@ -37,6 +37,7 @@ export class HomeComponent {
   protected readonly editDeadline = signal('');
   protected readonly selectedWeekDate = signal(new Date())
   protected readonly deleteDropActive = signal(false);
+  protected readonly openTaskMenuId = signal<number | null>(null);
 
   protected readonly tasks = this.tasksService.tasks;
   protected readonly tags = this.tagService.tags;
@@ -52,6 +53,11 @@ export class HomeComponent {
   protected readonly visibleWeekContainsToday = computed(() =>
     this.weekDays().some(day => this.getDateKey(day) === this.today)
   );
+
+  @HostListener('document:click')
+    onDocumentClick() {
+      this.openTaskMenuId.set(null);
+    }
 
   constructor() {
     effect(() => {
@@ -92,6 +98,43 @@ export class HomeComponent {
     this.tasksService.updateTask(task.id, { completed: !task.completed });
   }
 
+  moveTaskToWeek(task: TaskCard, direction: 'previous' | 'next'): void {
+    const currentDate = new Date(task.date);
+    const targetDate = new Date(currentDate);
+    targetDate.setDate(currentDate.getDate() + (direction === 'next' ? 7 : -7));
+
+    this.tasksService.updateTask(task.id, { date: this.getDateKey(targetDate) });
+
+    this.navigateWeek(direction); 
+  }
+
+  moveTaskToDate(task: TaskCard, targetDate: string): void {
+    this.tasksService.updateTask(task.id, { date: targetDate });
+  }
+
+  toggleTaskMenu(event: Event, task: TaskCard): void {
+    event.stopPropagation();
+
+    if (this.editingTaskId()) {
+      return;
+    }
+
+    this.openTaskMenuId.update(openTaskId =>
+      openTaskId === task.id ? null : task.id
+    );
+  }
+
+  editFromMenu(task: TaskCard): void {
+    this.startEdit(task);
+    this.openTaskMenuId.set(null);
+  }
+
+  deleteFromMenu(task: TaskCard): void {
+    this.tasksService.deleteTask(task.id);
+    this.openTaskMenuId.set(null);
+  }
+  
+
   protected toggleDeadlinePicker(event: Event, taskId: number): void {
     event.preventDefault();
     event.stopPropagation();
@@ -101,7 +144,19 @@ export class HomeComponent {
     );
   }
 
-  
+  protected startEdit(task: TaskCard): void {
+    this.editingTaskId.set(task.id);
+    this.deadlinePickerTaskId.set(null);
+    this.editTitle.set(task.title);
+    this.editDescription.set(task.description);
+    this.editTagId.set(task.tag?.id);
+    this.editDeadline.set(task.deadline ?? '');
+
+    setTimeout(() => {
+      document.getElementById(`task-title-${task.id}`)?.focus();
+    });
+  }
+
   private commitEdit(id: number, date: string, title: string, description: string, tagId: number, completed: boolean, deadline: string): void {
     if (this.editingTaskId() !== id) {
       return;
@@ -147,19 +202,6 @@ export class HomeComponent {
     }
 
     this.cancelEdit();
-  }
-  
-  protected startEdit(task: TaskCard): void {
-    this.editingTaskId.set(task.id);
-    this.deadlinePickerTaskId.set(null);
-    this.editTitle.set(task.title);
-    this.editDescription.set(task.description);
-    this.editTagId.set(task.tag?.id);
-    this.editDeadline.set(task.deadline ?? '');
-
-    setTimeout(() => {
-      document.getElementById(`task-title-${task.id}`)?.focus();
-    });
   }
 
   saveForm(event: Event, id: number, date: string, title: string, description: string, tagId: string, completed: boolean, deadline: string): void {

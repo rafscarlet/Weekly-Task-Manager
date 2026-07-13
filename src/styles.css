@@ -129,8 +129,11 @@
   *::after {
     border-color: rgb(var(--border));
   }
-}
 
+  button:hover {
+    cursor: pointer;
+  }
+}
 
 @layer components {
 
