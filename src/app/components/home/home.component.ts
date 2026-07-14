@@ -10,6 +10,7 @@ import { TagService } from '../../services/tag.service';
 import { SettingsService } from '../../services/settings.service';
 import { FormsModule } from '@angular/forms';
 import { formatTasksForClipboard } from '../../helpers/clipboard.helper';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-home',
@@ -25,6 +26,7 @@ export class HomeComponent {
   private toastService = inject(ToastService);
   private settingsService = inject(SettingsService);
   private router = inject(Router);
+  private dialog = inject(DialogService);
 
   protected readonly today = new Date().toISOString().split('T')[0];
   protected readonly loadError = signal<string | null>(null);
@@ -106,10 +108,12 @@ export class HomeComponent {
     this.tasksService.updateTask(task.id, { date: this.getDateKey(targetDate) });
 
     this.navigateWeek(direction); 
+    this.openTaskMenuId.set(null);
   }
 
   moveTaskToDate(task: TaskCard, targetDate: string): void {
     this.tasksService.updateTask(task.id, { date: targetDate });
+    this.openTaskMenuId.set(null);
   }
 
   toggleTaskMenu(event: Event, task: TaskCard): void {
@@ -129,11 +133,28 @@ export class HomeComponent {
     this.openTaskMenuId.set(null);
   }
 
-  deleteFromMenu(task: TaskCard): void {
+  async deleteFromMenu(task: TaskCard): Promise<void> {
+    const confirmed = await this.dialog.open({
+      title: 'Delete Task',
+      message: 'Are you sure you want to delete this task?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      icon: 'delete',
+      danger: true
+    });
+
+    if (!confirmed) {
+      return;
+    }
     this.tasksService.deleteTask(task.id);
     this.openTaskMenuId.set(null);
   }
   
+  protected setDeadline(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.editDeadline.set(input.value);
+  }
+
 
   protected toggleDeadlinePicker(event: Event, taskId: number): void {
     event.preventDefault();
@@ -253,7 +274,7 @@ export class HomeComponent {
   }
 
 
-  onDeleteDrop(event: CdkDragDrop<string>): void {
+  async onDeleteDrop(event: CdkDragDrop<string>): Promise<void> {
     const task = event.item.data as TaskCard | undefined;
     this.deleteDropActive.set(false);
     
@@ -261,6 +282,18 @@ export class HomeComponent {
       return;
     }
 
+  const confirmed = await this.dialog.open({
+      title: 'Delete Task',
+      message: 'Are you sure you want to delete this task?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      icon: 'delete',
+      danger: true
+    });
+
+    if (!confirmed) {
+      return;
+    }
     this.tasksService.deleteTask(task.id);
   }
 
@@ -268,7 +301,6 @@ export class HomeComponent {
     this.deleteDropActive.set(active);
   }
 
-  
   async copyTasksToClipboard(): Promise<void> {
     const tasksJson = formatTasksForClipboard(this.tasks(), this.weekDays(), this.showDeadlineOnCopy());
 

@@ -1,0 +1,32 @@
+@if (dialog.isOpen()){
+    <div class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/50">
+        <div class="w-120 rounded-xl bg-surface border border-border p-6 shadow-xl">
+            <h2 class="text-lg border-b border-border font-bold text-text">
+                {{ dialog.options()?.title }}
+            </h2>
+
+            <p class="mt-3 text-text-secondary">
+                {{dialog.options()?.message }}
+            </p>
+
+
+        <div class="mt-6 flex justify-end gap-3">
+            <button 
+                class="px-4 py-2 rounded-lg"
+                (click)="dialog.cancel()"
+                >
+                {{ dialog.options()?.cancelText ?? 'Cancel' }}
+            </button>
+            <button 
+                class="px-4 py-2 rounded-lg flex items-center gap-2"
+                [class]="dialog.options()?.danger ? 'bg-danger text-on-danger':'bg-primary text-on-primary'"
+                (click)="dialog.confirm()"
+                >
+                <i class="material-symbols-rounded">{{dialog.options()?.icon? dialog.options()?.icon : 'check'}}</i>
+                {{ dialog.options()?.confirmText ?? 'Confirm' }}
+            </button>
+        </div>
+        </div>
+
+    </div>
+}

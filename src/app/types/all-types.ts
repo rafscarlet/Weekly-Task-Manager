@@ -20,3 +20,14 @@ export type TaskCard = {
   deadline?: string;
   tag?: TagCategory;
 };
+
+export type DialogOptions ={
+  title: string;
+  message: string;
+  
+  confirmText?: string;
+  cancelText?: string;
+
+  icon?: string;
+  danger?: boolean;
+}

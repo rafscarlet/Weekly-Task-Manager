@@ -5,6 +5,7 @@ import { SettingsService } from '../../services/settings.service';
 import {FormsModule} from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
 import { ToastService } from '../../services/toast.service';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-settings-page',
@@ -18,6 +19,7 @@ export class SettingsPage {
   private settingsService = inject(SettingsService);
   private toastService = inject(ToastService);
   private themeService = inject(ThemeService);
+  private dialogService = inject(DialogService);
 
   tags = this.tagService.tags;
   localTags = signal(structuredClone(this.tagService.tags()));
@@ -72,10 +74,37 @@ export class SettingsPage {
     this.tagService.saveTags(this.localTags());
     this.settingsService.updateSettings(() => this.localSettings());
     this.toastService.showSuccess('Settings saved successfully!'); 
-    this.goBack();
   }
 
-  goBack() {
-    this.router.navigate(['/home']);
+  hasUnsavedChanges(): boolean {
+    const currentTags = this.localTags();
+    const originalTags = this.tagService.tags();
+    const currentSettings = this.localSettings();
+    const originalSettings = this.settingsService.settings();
+
+    const tagsChanged = JSON.stringify(currentTags) !== JSON.stringify(originalTags);
+    const settingsChanged = JSON.stringify(currentSettings) !== JSON.stringify(originalSettings);
+
+    return tagsChanged || settingsChanged;
+  }
+
+  async goBack() {
+    if (!this.hasUnsavedChanges()) {
+      this.router.navigate(['/home']);
+      return;
+    }
+
+    const confirm = await this.dialogService.open({
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Are you sure you want to go back?',
+      confirmText: 'Discard Changes',
+      cancelText: 'Stay',
+      icon: 'warning',
+      danger: true,
+    });
+
+    if (confirm) {
+      this.router.navigate(['/home']);
+    }
   }
 }

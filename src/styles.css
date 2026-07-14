@@ -1,3 +1,4 @@
+@import 'material-symbols/rounded.css';
 @import "tailwindcss";
 @theme {
   --color-bg: rgb(var(--bg));
