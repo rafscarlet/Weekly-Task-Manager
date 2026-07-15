@@ -99,26 +99,16 @@ ipcMain.on("settings:save", (_event, settings) => {
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1000,
-    height: 700,
+    width: 1400,
+    height: 800,
+    minWidth: 1200,
+    minHeight: 800,
+    icon: path.join(__dirname, "/assets/icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false
     }
-  });
-
-  app.on("before-quit", () => {
-    saveTasks()
-    saveTags();
-    saveSettings();
-  });
-
-  app.on("window-all-closed", () => {
-    saveTasks();
-    saveTags();
-    saveSettings();
-    app.quit();
   });
 
   const devServerUrl = process.env.ELECTRON_START_URL;
@@ -142,5 +132,18 @@ function createWindow() {
 
   win.loadURL("data:text/html,<h1>Angular build not found</h1><p>Run npm run build or npm run dev.</p>");
 }
+
+app.on("before-quit", () => {
+  saveTasks()
+  saveTags();
+  saveSettings();
+});
+
+app.on("window-all-closed", () => {
+  saveTasks();
+  saveTags();
+  saveSettings();
+  app.quit();
+});
 
 app.whenReady().then(createWindow);

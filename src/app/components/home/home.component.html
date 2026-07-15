@@ -8,21 +8,30 @@
   <span class="material-symbols-rounded" aria-hidden="true">settings</span>
 </button>
 
-<div class="mx-auto flex flex-1 w-full flex-row justify-center px-6 py-4" cdkDropListGroup>
+<div class="mx-auto flex-1 min-h-0 h-full w-full flex flex-row justify-center px-6 pt-4 pb-18 overflow-hidden"
+  cdkDropListGroup>
+
   <ng-container *ngTemplateOutlet="arrowButtonTemplate; context: { direction: 'previous' }"></ng-container>
 
   @for (day of weekDays(); track $index; let last = $last) {
-  <div class="flex flex-col flex-1 h-150 overflow-hidden" cdkDropList
-    [cdkDropListData]="(day | date: 'yyyy-MM-dd') ?? ''" (cdkDropListDropped)="onTaskDrop($event)">
-    <div class="m-4 flex flex-col items-center h-32 gap-2 p-4 rounded-3xl border bg-surface" [style.border-color]="
-          today === (day | date: 'yyyy-MM-dd')
-            ? 'rgb(var(--primary))'
-            : 'rgb(var(--border))'
-        " [style.background]="
-          today === (day | date: 'yyyy-MM-dd')
-            ? 'rgb(var(--primary) / 0.08)'
-            : 'rgb(var(--surface))'
-        ">
+
+  <div class="flex flex-col flex-1 min-h-0 h-full overflow-hidden" 
+       cdkDropList
+       [cdkDropListData]="(day | date: 'yyyy-MM-dd') ?? ''"
+       (cdkDropListDropped)="onTaskDrop($event)">
+
+    <div class="m-4 flex flex-col items-center h-32 shrink-0 gap-2 p-4 rounded-3xl border bg-surface"
+      [style.border-color]="
+        today === (day | date: 'yyyy-MM-dd')
+          ? 'rgb(var(--primary))'
+          : 'rgb(var(--border))'
+      "
+      [style.background]="
+        today === (day | date: 'yyyy-MM-dd')
+          ? 'rgb(var(--primary) / 0.08)'
+          : 'rgb(var(--surface))'
+      ">
+
       <p class="text-sm uppercase tracking-[0.2em] text-text-secondary">
         {{ days[$index] }}
       </p>
@@ -36,46 +45,78 @@
       </p>
     </div>
 
-    <div class="mx-3 mt-3 p-3 flex items-center gap-2 text-text-secondary border-b border-border"
-      [ngClass]="editingTaskId() ? 'hover:cursor-not-allowed' : 'cursor-pointer'" (click)="newTask(getDateKey(day))">
-      <i class="material-symbols-rounded p-1 border rounded border-border icon-button" [ngClass]="
-            editingTaskId()
-              ? 'bg-surface-hover hover:bg-surface-hover'
-              : 'bg-surface-hover hover:bg-primary-hover text-primary hover:text-on-primary'" style="font-size: 18px">
+    <div class="mx-3 mt-3 shrink-0 p-3 flex items-center gap-2 text-text-secondary border-b border-border"
+      [ngClass]="editingTaskId() ? 'hover:cursor-not-allowed' : 'cursor-pointer'"
+      (click)="newTask(getDateKey(day))">
+
+      <i class="material-symbols-rounded p-1 border rounded border-border icon-button"
+        [ngClass]="
+          editingTaskId()
+            ? 'bg-surface-hover hover:bg-surface-hover'
+            : 'bg-surface-hover hover:bg-primary-hover text-primary hover:text-on-primary'
+        "
+        style="font-size:18px">
         add
       </i>
 
-      <p class="text-text-secondary text-sm">Add task</p>
+      <p class="text-text-secondary text-sm">
+        Add task
+      </p>
+
     </div>
 
-    @for (
-    task of getTasksForDay((day | date: "yyyy-MM-dd") ?? "");
-    track task.id
-    ) {
-    <div class="mx-3" cdkDrag [cdkDragData]="task" [cdkDragDisabled]="editingTaskId() === task.id">
-      <ng-container *ngTemplateOutlet="taskTemplate; context: { $implicit: task }">
-      </ng-container>
+
+    <!-- ONLY THIS PART SCROLLS -->
+    <div class="flex-1 min-h-0 overflow-y-auto">
+
+      @for (
+        task of getTasksForDay((day | date: "yyyy-MM-dd") ?? "");
+        track task.id
+      ) {
+
+      <div class="mx-3"
+           cdkDrag
+           [cdkDragData]="task"
+           [cdkDragDisabled]="editingTaskId() === task.id">
+
+        <ng-container *ngTemplateOutlet="taskTemplate; context: { $implicit: task }">
+        </ng-container>
+
+      </div>
+
+      }
+
     </div>
-    }
+
   </div>
 
+
   @if (!last) {
-  <div class="m-0 border-r border-border last:border-0"></div>
+    <div class="m-0 border-r border-border"></div>
   }
+
   }
+
 
   <ng-container *ngTemplateOutlet="arrowButtonTemplate; context: { direction: 'next' }"></ng-container>
 
+
   <div
     class="delete-drop-zone fixed bottom-5 left-5 z-30 flex items-center justify-center w-16 h-16 rounded-full bg-danger shadow-lg transition-all duration-200 cursor-pointer"
-    cdkDropList [cdkDropListSortingDisabled]="true" [cdkDropListData]="'delete'"
-    (cdkDropListEntered)="setDeleteDropActive(true)" (cdkDropListExited)="setDeleteDropActive(false)"
-    (cdkDropListDropped)="onDeleteDrop($event)" [ngClass]="deleteDropActive() ? 'scale-125 bg-danger-hover' : ''"
-    title="Drag Tasks here to delete!">
-    <span class="material-symbols-rounded text-on-danger" style="font-size: 32px">
+    cdkDropList
+    [cdkDropListSortingDisabled]="true"
+    [cdkDropListData]="'delete'"
+    (cdkDropListEntered)="setDeleteDropActive(true)"
+    (cdkDropListExited)="setDeleteDropActive(false)"
+    (cdkDropListDropped)="onDeleteDrop($event)"
+    [ngClass]="deleteDropActive() ? 'scale-125 bg-danger-hover' : ''">
+
+    <span class="material-symbols-rounded text-on-danger" style="font-size:32px">
       delete
     </span>
+
   </div>
+
 </div>
 
 <div class="fixed bottom-4 right-4" [ngClass]="
