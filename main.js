@@ -1,3 +1,11 @@
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught error:", error);
+});
+
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled rejection:", error);
+});
+
 const { app, BrowserWindow, ipcMain } = require("electron");
 const fs = require("fs");
 const path = require("path");
@@ -6,6 +14,13 @@ let tasksCache = [];
 let tagsCache = [];
 let settingsCache = {};
 
+function ensureUserDataFolder() {
+  const dir = app.getPath("userData");
+
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
 
 // Tasks 
 function getTasksFilePath() {
@@ -103,12 +118,18 @@ function createWindow() {
     height: 800,
     minWidth: 1200,
     minHeight: 800,
-    icon: path.join(__dirname, "/assets/icon.ico"),
+    show: false,
+    icon: path.join(__dirname, "assets", "icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false
     }
+  });
+
+  win.once("ready-to-show", () => {
+    win.maximize();
+    win.show();
   });
 
   const devServerUrl = process.env.ELECTRON_START_URL;
@@ -139,11 +160,17 @@ app.on("before-quit", () => {
   saveSettings();
 });
 
-app.on("window-all-closed", () => {
+aapp.on("window-all-closed", () => {
   saveTasks();
   saveTags();
   saveSettings();
-  app.quit();
+
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  ensureUserDataFolder();
+  createWindow();
+});
