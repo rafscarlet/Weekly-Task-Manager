@@ -160,7 +160,7 @@ app.on("before-quit", () => {
   saveSettings();
 });
 
-aapp.on("window-all-closed", () => {
+app.on("window-all-closed", () => {
   saveTasks();
   saveTags();
   saveSettings();
