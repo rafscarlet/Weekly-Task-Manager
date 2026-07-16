@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - windows-latest
+          # - windows-latest
           - ubuntu-latest
 
     runs-on: ${{ matrix.os }}
@@ -19,20 +19,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
           node-version: 22
 
-
       - name: Install dependencies
         run: npm ci
 
+      - name: Build Angular
+        run: npm run build
 
       - name: Build Electron app
-        run: npm run dist
-
+        run: npx electron-builder --publish never
 
       - name: Upload build
         uses: actions/upload-artifact@v4

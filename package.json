@@ -11,11 +11,13 @@
     "dev:electron": "wait-on http://localhost:4200 && cross-env ELECTRON_START_URL=http://localhost:4200 electron .",
     "dev:main": "nodemon --watch main.js --watch preload.js --ext js --exec \"wait-on http://localhost:4200 && cross-env ELECTRON_START_URL=http://localhost:4200 electron .\"",
     "dev": "concurrently -k \"npm run dev:angular\" \"npm run dev:main\"",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder", 
+    "dist:linux": "electron-builder --linux AppImage"
   },
   "build": {
     "appId": "com.graf.calendartasks",
     "productName": "Calendar Tasks",
+    "publish": null,
     "directories": {
       "output": "release"
     },
