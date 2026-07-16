@@ -26,6 +26,9 @@ Calendar Tasks is a simple productivity app designed to help you plan your week,
 - [ ] Add No-Date column -> tasks without a specific date or a date period 
 - [ ] Duplicate task option
 - [ ] Edit copy to clipboard template (later)
+- [ ] Preselected tags option
+- [ ] Move task to specific date
+- [ ] Duplicate task option
 
 ## Download 
 

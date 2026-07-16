@@ -15,7 +15,7 @@
     "dist:linux": "electron-builder --linux AppImage"
   },
   "build": {
-    "appId": "com.graf.calendartasks",
+    "appId": "com.rafscarlet.calendartasks",
     "productName": "Calendar Tasks",
     "publish": null,
     "directories": {
