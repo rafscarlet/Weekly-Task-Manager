@@ -1,6 +1,6 @@
 {
   "name": "calendar-tasks",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -11,13 +11,19 @@
     "dev:electron": "wait-on http://localhost:4200 && cross-env ELECTRON_START_URL=http://localhost:4200 electron .",
     "dev:main": "nodemon --watch main.js --watch preload.js --ext js --exec \"wait-on http://localhost:4200 && cross-env ELECTRON_START_URL=http://localhost:4200 electron .\"",
     "dev": "concurrently -k \"npm run dev:angular\" \"npm run dev:main\"",
-    "dist": "npm run build && electron-builder", 
-    "dist:linux": "electron-builder --linux AppImage"
+    "dist": "npm run build && electron-builder",
+    "dist:linux": "electron-builder --linux AppImage",
+    "release": "electron-builder --publish always"
   },
   "build": {
     "appId": "com.rafscarlet.calendartasks",
     "productName": "Calendar Tasks",
-    "publish": null,
+    "publish": {
+      "provider": "github",
+      "owner": "rafscarlet",
+      "repo": "Weekly-Task-Manager",
+      "releaseType": "release"
+    },
     "directories": {
       "output": "release"
     },
@@ -32,6 +38,7 @@
       "icon": "assets/icon.ico"
     },
     "linux": {
+      "target": ["AppImage"],
       "icon": "assets/icon.png"
     }
   },
@@ -65,6 +72,7 @@
     "@angular/platform-browser": "^21.2.14",
     "@angular/platform-browser-dynamic": "^21.2.14",
     "@angular/router": "^21.2.17",
+    "electron-updater": "^6.8.9",
     "material-symbols": "^0.45.8",
     "rxjs": "^7.8.2",
     "tslib": "^2.8.1",

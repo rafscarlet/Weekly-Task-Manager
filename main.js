@@ -7,6 +7,8 @@ process.on("unhandledRejection", (error) => {
 });
 
 const { app, BrowserWindow, ipcMain } = require("electron");
+const { autoUpdater } = require("electron-updater");
+
 const fs = require("fs");
 const path = require("path");
 
@@ -41,6 +43,10 @@ function saveTasks(tasks = tasksCache) {
   tasksCache = tasks;
   fs.writeFileSync(getTasksFilePath(), JSON.stringify({ tasks: tasksCache }, null, 2));
 }
+
+ipcMain.handle("app:getVersion", () => {
+  return app.getVersion();
+});
 
 ipcMain.handle("tasks:load", () => {
   tasksCache = readTasks();
@@ -110,7 +116,7 @@ ipcMain.on("settings:save", (_event, settings) => {
   saveSettings(typeof settings === "object" && settings !== null ? settings : {});
 });
 
-///////
+
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -154,6 +160,48 @@ function createWindow() {
   win.loadURL("data:text/html,<h1>Angular build not found</h1><p>Run npm run build or npm run dev.</p>");
 }
 
+
+function setupAutoUpdater() {
+  if (!app.isPackaged) {
+    console.log("Updater disabled in development");
+    return;
+  }
+  autoUpdater.on("checking-for-update", () => {
+    console.log("Checking for updates...");
+  });
+
+  autoUpdater.on("update-available", (info) => {
+    console.log("Update available:", info.version);
+  });
+
+  autoUpdater.on("update-not-available", () => {
+    console.log("No update available");
+  });
+
+  autoUpdater.on("update-downloaded", () => {
+    console.log("Update downloaded");
+    autoUpdater.on("update-downloaded", () => {
+      dialog.showMessageBox({
+        type: "info",
+        title: "Update ready",
+        message: "A new version has been downloaded. Restart to update?"
+      }).then(() => {
+        autoUpdater.quitAndInstall();
+      });
+    });
+  });
+
+  autoUpdater.on("error", (error) => {
+    console.error("Update error:", error);
+  });
+
+  autoUpdater.checkForUpdatesAndNotify();
+
+}
+
+
+////////////// APP //////////////
+
 app.on("before-quit", () => {
   saveTasks()
   saveTags();
@@ -173,4 +221,6 @@ app.on("window-all-closed", () => {
 app.whenReady().then(() => {
   ensureUserDataFolder();
   createWindow();
+
+  setupAutoUpdater();
 });

@@ -14,6 +14,8 @@ Calendar Tasks is a simple productivity app designed to help you plan your week,
 - [x] Customizable Settings 
 - [x] Offline Storage (your data stays on your device)
 - [x] Light/Dark Mode
+- [x] Linux .AppImage file 
+- [x] Automatic Updates (windows)
 
 ## Next Updates Feature Ideas (TODOs)
 
@@ -24,7 +26,6 @@ Calendar Tasks is a simple productivity app designed to help you plan your week,
 - [ ] Move task to specific date
 - [ ] Lock app (add PIN (?))
 - [ ] Add No-Date column -> tasks without a specific date or a date period 
-- [ ] Duplicate task option
 - [ ] Edit copy to clipboard template (later)
 - [ ] Preselected tags option
 - [ ] Move task to specific date

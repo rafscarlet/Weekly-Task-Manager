@@ -13,4 +13,10 @@ import { DialogComponent } from './components/dialog.component/dialog.component'
 })
 export class AppComponent {
   private themeService = inject(ThemeService);
+  
+  appVersion = '';
+
+  async ngOnInit() {
+    this.appVersion = await window.electronAPI.getVersion();
+  }
 }

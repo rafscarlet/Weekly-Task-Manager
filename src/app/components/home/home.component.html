@@ -67,7 +67,7 @@
 
 
     <!-- ONLY THIS PART SCROLLS -->
-    <div class="flex-1 min-h-0 overflow-y-auto">
+    <div class="flex-1 pt-1 min-h-0 overflow-y-auto overflow-x-hidden">
 
       @for (
         task of getTasksForDay((day | date: "yyyy-MM-dd") ?? "");
@@ -81,25 +81,17 @@
 
         <ng-container *ngTemplateOutlet="taskTemplate; context: { $implicit: task }">
         </ng-container>
-
       </div>
-
       }
-
     </div>
 
   </div>
-
-
   @if (!last) {
     <div class="m-0 border-r border-border"></div>
   }
-
   }
 
-
   <ng-container *ngTemplateOutlet="arrowButtonTemplate; context: { direction: 'next' }"></ng-container>
-
 
   <div
     class="delete-drop-zone fixed bottom-5 left-5 z-30 flex items-center justify-center w-16 h-16 rounded-full bg-danger shadow-lg transition-all duration-200 cursor-pointer"
@@ -132,14 +124,13 @@
 
 <ng-template #taskTemplate let-task>
   <div
-    class="relative group w-full flex flex-row items-center gap-2 rounded-xl p-3 border-b border-border overflow-visible task-card transition-all duration-150"
-    [style.background]="
-      editingTaskId() === task.id ? 'rgb(var(--primary) / 0.08)' : ''
-    " [class.opacity-50]="editingTaskId() !== task.id && editingTaskId() !== null"
-    [class.ring-2]="editingTaskId() === task.id" [class.ring-primary]="editingTaskId() === task.id"
-    [style.border-color]="
-      editingTaskId() === task.id ? 'rgb(var(--primary) / 0.3)' : ''
-    ">
+    class="relative group w-full flex flex-row items-start gap-2 rounded-xl p-3 border-b border-border overflow-visible task-card transition-all duration-150"
+    [class.opacity-50]="editingTaskId() !== task.id && editingTaskId() !== null"
+    [ngStyle]="editingTaskId()===task.id? 
+        {'background': 'rgb(var(--primary)/0.08)', 'border-color': 'rgb(var(--primary) / 0.3)'} : {}"
+
+    [ngClass]="editingTaskId() === task.id ? 'ring-2 ring-primary h-35':'max-h-25'"
+    >
     @if (editingTaskId() === task.id) {
     <form #editForm (submit)="
           saveForm(
@@ -149,66 +140,67 @@
             title.value,
             description.value,
             tagSelect.value,
-            completed.checked,
             deadlineDate.value
           )
-        " class="relative flex flex-col gap-2 w-full">
-      <div class="flex flex-row items-center gap-2 w-full">
-        <input type="checkbox" #completed [checked]="task.completed" class="round-checkbox" />
-
-        <div class="flex flex-col flex-1">
+        " class="relative flex flex-col justify-between w-full  h-full">
+      <div class="flex flex-row items-center gap-3 w-full">
+        <div class="flex flex-col flex-1 gap-3 py-2">
           <input type="text" [id]="'task-title-' + task.id" #title placeholder="Name"
-            class="w-full text-sm bg-transparent border-b border-border text-text focus:outline-none focus:border-primary"
+            class="edit-input-text"
             [value]="editTitle()" />
 
           <input type="text" #description placeholder="Description"
-            class="w-full text-sm bg-transparent border-b border-border text-text focus:outline-none focus:border-primary"
+            class="edit-input-text"
             [value]="editDescription()" />
         </div>
 
-        <select #tagSelect name="tag" class="text-sm bg-surface text-text border border-border rounded-lg"
-          [ngModel]="editTagId()" (ngModelChange)="editTagId.set($event)">
-          <option [value]="undefined" class="text-text-secondary">
-            None
-          </option>
+        <div class="flex flex-col justify-center">
 
-          @for (tag of tags(); track tag.id) {
-          <option [value]="tag.id">
-            {{ tag.name }}
-          </option>
-          }
-        </select>
+          <div class="flex flex-row justify-center gap-2" [ngClass]="editDeadline() ? 'text-danger' : 'text-text-secondary'">
+            <button type="button" class="icon-button" (click)="toggleDeadlinePicker($event, task.id)"
+              [attr.title]="editDeadline() ? 'Edit Deadline' : 'Set Deadline'">
+              <i class="material-symbols-rounded"> warning </i>
+            </button>
 
-        <div class="flex flex-col justify-center" [ngClass]="editDeadline() ? 'text-danger' : 'text-text-secondary'">
-          <button type="button" class="icon-button" (click)="toggleDeadlinePicker($event, task.id)"
-            [attr.title]="editDeadline() ? 'Edit Deadline' : 'Set Deadline'">
-            <i class="material-symbols-rounded"> warning </i>
-          </button>
+            @if (editDeadline()) {
+              <p class="text-xs mt-1">
+                {{ editDeadline() | date: "dd/MM" }}
+              </p>
+            }
 
-          @if (editDeadline()) {
-            <p class="text-xs">
-              {{ editDeadline() | date: "dd/MM" }}
-            </p>
-          }
+            <input 
+              #deadlineDate 
+              type="date" 
+              [value]="editDeadline()"
+              (change)="setDeadline($event)"
+              class="absolute right-0 top-8 z-20 rounded-lg border border-border bg-surface text-text p-2 text-sm shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)]"
+              [class.hidden]="deadlinePickerTaskId() !== task.id" />
+          </div>
 
-          <input 
-            #deadlineDate 
-            type="date" 
-            [value]="editDeadline()"
-            (change)="setDeadline($event)"
-            class="absolute right-0 top-8 z-20 rounded-lg border border-border bg-surface text-text p-2 text-sm shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)]"
-            [class.hidden]="deadlinePickerTaskId() !== task.id" />
+          <select #tagSelect name="tag" class="text-sm max-w-23 text-text bg-surface border border-border rounded-lg"
+            [ngModel]="editTagId()" (ngModelChange)="editTagId.set($event)">
+            <option [value]="undefined">
+              None
+            </option>
+
+            @for (tag of tags(); track tag.id) {
+            <option [value]="tag.id"
+            [style.background]="tag.id? tag.color : ''">
+              {{ tag.name }}
+            </option>
+            }
+          </select>
         </div>
       </div>
 
       <div class="flex items-center justify-end gap-2">
         <button type="submit"
-          class="w-20 icon-button rounded-full border border-success bg-success px-3 py-1 text-sm font-semibold text-on-success shadow-sm hover:bg-success-hover">
+          class="w-20 icon-button rounded-full border border-success bg-success py-1 text-sm font-semibold text-on-success shadow-sm hover:bg-success-hover">
           Save
         </button>
 
         <button type="button"
-          class="w-20 icon-button rounded-full border border-border bg-neutral px-3 py-1 text-sm font-semibold text-on-neutral shadow-sm hover:bg-neutral-hover"
+          class="w-20 icon-button rounded-full border border-border bg-neutral py-1 text-sm font-semibold text-on-neutral shadow-sm hover:bg-neutral-hover"
           (click)="cancelEdit()">
           Cancel
         </button>
@@ -268,20 +260,18 @@
     </div>
     }
 
-    <input type="checkbox" [checked]="task.completed" (change)="toggleTaskCompleted(task)" class="round-checkbox" />
+    <input type="checkbox" [checked]="task.completed" (change)="toggleTaskCompleted(task)" class="round-checkbox mt-1" />
 
     <span>
       <span class="flex items-center gap-2">
-
-
         <h1 class="font-semibold text-text text-sm truncate"
           [ngClass]="task.completed ? 'line-through text-text-secondary' : ''">
           {{ task.title }}
         </h1>
 
         @if (task.tag) {
-        <span class="text-xs font-bold text-on-primary px-2 py-1 rounded-full" [style.background]="task.tag.color">
-          {{ task.tag.name | uppercase | slice: 0 : 1 }}
+        <span class="text-xs font-bold text-on-primary px-2 py-1 rounded-full" [style.background]="task.tag.color" style="font-size: 10px">
+          {{ task.tag.name | uppercase }}
         </span>
         }
         @if (task.deadline) {
@@ -294,7 +284,7 @@
         }
       </span>
 
-      <p class="text-sm text-text-secondary truncate">
+      <p class="text-sm text-text-secondary text-wrap truncate">
         {{ task.description }}
       </p>
 
