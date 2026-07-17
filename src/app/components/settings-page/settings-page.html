@@ -14,7 +14,7 @@
             
 
             <input #showCompleted type="checkbox" name="showCompleted" [(ngModel)]="localSettings().showCompleted"
-                class="w-5 h-5 round-checkbox" />
+                class="round-checkbox" />
         </div>
         
         <div class="section-field">
@@ -24,7 +24,7 @@
             
 
             <input #darkMode type="checkbox" name="darkMode" [ngModel]="localSettings().darkMode" (ngModelChange)="toggleDarkMode($event)"
-                class="w-5 h-5 round-checkbox" />
+                class="round-checkbox" />
         </div>
 
         <!-- Tags -->

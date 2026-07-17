@@ -3,16 +3,13 @@ name: Build App
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  build:
+  release-windows:
 
-    strategy:
-      matrix:
-        os:
-          - windows-latest
-          - ubuntu-latest
-
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
 
@@ -30,11 +27,31 @@ jobs:
       - name: Build Angular
         run: npm run build
 
-      - name: Build Electron app
-        run: npx electron-builder --publish never
+      - name: Publish Release
+        run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload build
-        uses: actions/upload-artifact@v4
+  linux-build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
         with:
-          name: ${{ matrix.os }}-build
-          path: release/
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular
+        run: npm run build
+
+      - name: Publish Linux
+        run: npx electron-builder --linux --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

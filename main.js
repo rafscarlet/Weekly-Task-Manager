@@ -7,6 +7,8 @@ process.on("unhandledRejection", (error) => {
 });
 
 const { app, BrowserWindow, ipcMain } = require("electron");
+const { autoUpdater } = require("electron-updater");
+
 const fs = require("fs");
 const path = require("path");
 
@@ -110,7 +112,7 @@ ipcMain.on("settings:save", (_event, settings) => {
   saveSettings(typeof settings === "object" && settings !== null ? settings : {});
 });
 
-///////
+
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -154,6 +156,40 @@ function createWindow() {
   win.loadURL("data:text/html,<h1>Angular build not found</h1><p>Run npm run build or npm run dev.</p>");
 }
 
+
+function setupAutoUpdater() {
+  if (!app.isPackaged) {
+    console.log("Updater disabled in development");
+    return;
+  }
+  autoUpdater.on("checking-for-update", () => {
+    console.log("Checking for updates...");
+  });
+
+  autoUpdater.on("update-available", (info) => {
+    console.log("Update available:", info.version);
+  });
+
+  autoUpdater.on("update-not-available", () => {
+    console.log("No update available");
+  });
+
+  autoUpdater.on("update-downloaded", () => {
+    console.log("Update downloaded");
+    // autoUpdater.quitAndInstall();
+  });
+
+  autoUpdater.on("error", (error) => {
+    console.error("Update error:", error);
+  });
+
+  autoUpdater.checkForUpdatesAndNotify();
+
+}
+
+
+////////////// APP //////////////
+
 app.on("before-quit", () => {
   saveTasks()
   saveTags();
@@ -173,4 +209,6 @@ app.on("window-all-closed", () => {
 app.whenReady().then(() => {
   ensureUserDataFolder();
   createWindow();
+
+  setupAutoUpdater();
 });

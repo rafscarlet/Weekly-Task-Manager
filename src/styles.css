@@ -134,6 +134,29 @@
   button:hover {
     cursor: pointer;
   }
+
+  select {
+    padding: 0.25rem 0.1rem;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    background: transparent;
+
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(225,225,225,0.1);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--primary) / 0.5); 
+  }
 }
 
 @layer components {
@@ -182,6 +205,7 @@
 
     display: inline-grid;
     place-content: center;
+    flex-shrink: 0;
 
     transition:
       background-color 150ms ease,

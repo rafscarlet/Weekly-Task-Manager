@@ -178,7 +178,7 @@ export class HomeComponent {
     });
   }
 
-  private commitEdit(id: number, date: string, title: string, description: string, tagId: number, completed: boolean, deadline: string): void {
+  private commitEdit(id: number, date: string, title: string, description: string, tagId: number, deadline: string): void {
     if (this.editingTaskId() !== id) {
       return;
     }
@@ -190,16 +190,9 @@ export class HomeComponent {
     const nextDescription = description.trim();
     const nextTag = this.tags().find(tag => tag.id === tagId) || undefined
     const nextDeadline = deadline.trim();
+    const completed = this.tasks().find(task => task.id === id)?.completed || false;
 
-    if (!nextTitle && !nextDescription) {
-      if (!isDraftTask) {
-        this.tasksService.deleteTask(id);
-      }
-      this.cancelEdit();
-      return;
-    }
-
-    if (nextTitle && !nextDescription) {
+    if (!nextTitle) {
       if (!isDraftTask) {
         this.tasksService.deleteTask(id);
       }
@@ -225,10 +218,10 @@ export class HomeComponent {
     this.cancelEdit();
   }
 
-  saveForm(event: Event, id: number, date: string, title: string, description: string, tagId: string, completed: boolean, deadline: string): void {
+  saveForm(event: Event, id: number, date: string, title: string, description: string, tagId: string, deadline: string): void {
     event.preventDefault();
     event.stopPropagation();
-    this.commitEdit(id, date, title, description, Number(tagId), completed, deadline);
+    this.commitEdit(id, date, title, description, Number(tagId), deadline);
   }
 
 
