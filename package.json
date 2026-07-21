@@ -1,6 +1,6 @@
 {
   "name": "calendar-tasks",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -38,7 +38,9 @@
       "icon": "assets/icon.ico"
     },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "icon": "assets/icon.png"
     }
   },
