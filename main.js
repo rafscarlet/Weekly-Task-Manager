@@ -179,16 +179,15 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on("update-downloaded", () => {
-    console.log("Update downloaded");
-    autoUpdater.on("update-downloaded", () => {
+      console.log("Update downloaded");
       dialog.showMessageBox({
         type: "info",
         title: "Update ready",
-        message: "A new version has been downloaded. Restart to update?"
+        message: "A new version has been downloaded.",
+        detail: "The application will restart to install the update."
       }).then(() => {
         autoUpdater.quitAndInstall();
       });
-    });
   });
 
   autoUpdater.on("error", (error) => {
@@ -196,7 +195,6 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.checkForUpdatesAndNotify();
-
 }
 
 

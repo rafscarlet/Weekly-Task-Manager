@@ -22,7 +22,6 @@ Calendar Tasks is a simple productivity app designed to help you plan your week,
 - [ ] Delete/See/Export all saved tasks
 - [ ] Notifications for deadlines
 - [ ] Different color themes 
-- [ ] Option to show weekends 
 - [ ] Move task to specific date
 - [ ] Lock app (add PIN (?))
 - [ ] Add No-Date column -> tasks without a specific date or a date period 
@@ -30,13 +29,18 @@ Calendar Tasks is a simple productivity app designed to help you plan your week,
 - [ ] Preselected tags option
 - [ ] Move task to specific date
 - [ ] Duplicate task option
+- [ ] Option to show weekends 
+- [ ] Add tag icon/image/label
+- [ ] Add monthly view
+- [ ] Use enter button to save task
+- [ ] Filter Copy tasks by tag
 
 ## Download 
 
 Go to the [**Releases**](https://github.com/rafscarlet/Weekly-Task-Manager/releases) section and download: 
 **Calendar Tasks Setup.exe**
 
-Run the installer and follow the instructions. 
+Run the installer and follow the instructions. Any new updates will be downloaded automatically thanks to Electron Updater!
 
 ## Screenshots 
 

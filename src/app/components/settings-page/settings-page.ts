@@ -46,13 +46,13 @@ export class SettingsPage {
     this.themeService.applyTheme();
   }
 
-  updateColor(event: Event, id: number) {
+  updateColor(event: Event, id: string) {
     const input = event.target as HTMLInputElement;
     const newColor = input.value;
     this.localTags().find(tag => tag.id === id)!.color = newColor;
   }
 
-  updateName(event: Event, id: number) {
+  updateName(event: Event, id: string) {
     const input = event.target as HTMLInputElement;
     const newName = input.value;
     this.localTags().find(tag => tag.id === id)!.name = newName;
@@ -60,18 +60,24 @@ export class SettingsPage {
 
   addTag(){
     const currentTags = this.localTags();
-    const newId = currentTags.length > 0 ? Math.max(...currentTags.map(tag => tag.id)) + 1 : 1;
+    const newId = 'tempId';
     this.localTags.set([...currentTags, {id: newId, name: '', color: '#ff0000' }]);
   }
 
-  deleteTag(id: number) {
+  deleteTag(id: string) {
     const currentTags = this.localTags();
     this.localTags.set(currentTags.filter((tag) => tag.id !== id));
   }
 
   saveSettings(event: Event) {
     event.preventDefault();
-    this.tagService.saveTags(this.localTags());
+
+    const tagsWithValidIds = this.localTags().map(tag => {
+      const newId = `${tag.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${tag.color}`;
+      return ({ ...tag, id: tag.id.startsWith('tempId') ? newId : tag.id })
+    });
+    // console.log('Tags with valid IDs:', tagsWithValidIds);
+    this.tagService.saveTags(tagsWithValidIds);
     this.settingsService.updateSettings(() => this.localSettings());
     this.toastService.showSuccess('Settings saved successfully!'); 
   }

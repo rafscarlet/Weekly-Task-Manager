@@ -8,14 +8,14 @@
   <span class="material-symbols-rounded" aria-hidden="true">settings</span>
 </button>
 
-<div class="mx-auto flex-1 min-h-0 h-full w-full flex flex-row justify-center px-6 pt-4 pb-18 overflow-hidden"
+<div class="mx-auto flex-1 min-h-0 h-full w-full flex flex-row justify-center px-6 pt-4 pb-4"
   cdkDropListGroup>
 
   <ng-container *ngTemplateOutlet="arrowButtonTemplate; context: { direction: 'previous' }"></ng-container>
 
   @for (day of weekDays(); track $index; let last = $last) {
 
-  <div class="flex flex-col flex-1 min-h-0 h-full overflow-hidden" 
+  <div class="flex flex-col flex-1 min-h-0 h-full overflow-visible" 
        cdkDropList
        [cdkDropListData]="(day | date: 'yyyy-MM-dd') ?? ''"
        (cdkDropListDropped)="onTaskDrop($event)">
@@ -66,8 +66,7 @@
     </div>
 
 
-    <!-- ONLY THIS PART SCROLLS -->
-    <div class="flex-1 pt-1 min-h-0 overflow-y-auto overflow-x-hidden">
+    <div class="flex-1 py-1 min-h-0 overflow-y-auto overflow-x-hidden">
 
       @for (
         task of getTasksForDay((day | date: "yyyy-MM-dd") ?? "");
@@ -75,9 +74,10 @@
       ) {
 
       <div class="mx-3"
-           cdkDrag
-           [cdkDragData]="task"
-           [cdkDragDisabled]="editingTaskId() === task.id">
+          [attr.id]="'task-' + task.id"
+          cdkDrag
+          [cdkDragData]="task"
+          [cdkDragDisabled]="editingTaskId() !== null">
 
         <ng-container *ngTemplateOutlet="taskTemplate; context: { $implicit: task }">
         </ng-container>
@@ -87,14 +87,15 @@
 
   </div>
   @if (!last) {
-    <div class="m-0 border-r border-border"></div>
-  }
+      <div class="m-0 border-r border-border"></div>
+    }
   }
 
   <ng-container *ngTemplateOutlet="arrowButtonTemplate; context: { direction: 'next' }"></ng-container>
 
   <div
-    class="delete-drop-zone fixed bottom-5 left-5 z-30 flex items-center justify-center w-16 h-16 rounded-full bg-danger shadow-lg transition-all duration-200 cursor-pointer"
+    class="delete-drop-zone fixed bottom-8 left-5 z-30 flex items-center justify-center 
+    w-16 h-16 rounded-full bg-danger shadow-lg transition-all duration-200 cursor-pointer"
     cdkDropList
     [cdkDropListSortingDisabled]="true"
     [cdkDropListData]="'delete'"
@@ -111,11 +112,12 @@
 
 </div>
 
-<div class="fixed bottom-4 right-4" [ngClass]="
+<div class="fixed bottom-10 right-4" [ngClass]="
     visibleWeekContainsToday() ? 'pointer-events-none opacity-0' : 'opacity-100'
   ">
   <button
-    class="icon-button py-3 px-4 bg-surface border-2 border-primary rounded-lg flex items-center gap-3 shadow-[0_14px_32px_rgba(15,23,42,0.35)] hover:bg-surface-hover"
+    class="icon-button py-2 px-4 bg-surface border-2 border-primary rounded-lg 
+    flex items-center gap-3 shadow-[0_14px_32px_rgba(15,23,42,0.35)] hover:bg-surface-hover"
     (click)="goToToday()">
     <i class="material-symbols-rounded text-primary">arrow_top_left</i>
     <span class="font-semibold text-text">Go to Today</span>
@@ -124,12 +126,13 @@
 
 <ng-template #taskTemplate let-task>
   <div
-    class="relative group w-full flex flex-row items-start gap-2 rounded-xl p-3 border-b border-border overflow-visible task-card transition-all duration-150"
+    class="relative group w-full flex flex-row items-start gap-2 rounded-xl p-2 
+    border-b border-border transition-all duration-150"
     [class.opacity-50]="editingTaskId() !== task.id && editingTaskId() !== null"
     [ngStyle]="editingTaskId()===task.id? 
         {'background': 'rgb(var(--primary)/0.08)', 'border-color': 'rgb(var(--primary) / 0.3)'} : {}"
 
-    [ngClass]="editingTaskId() === task.id ? 'ring-2 ring-primary h-35':'max-h-25'"
+    [ngClass]="editingTaskId() === task.id ? 'ring-2 ring-primary min-h-35 max-h-50':'max-h-25'"
     >
     @if (editingTaskId() === task.id) {
     <form #editForm (submit)="
@@ -142,16 +145,16 @@
             tagSelect.value,
             deadlineDate.value
           )
-        " class="relative flex flex-col justify-between w-full  h-full">
+        " class="relative flex flex-col justify-between w-full">
       <div class="flex flex-row items-center gap-3 w-full">
-        <div class="flex flex-col flex-1 gap-3 py-2">
+        <div class="flex flex-col flex-1 gap-3 py-2 text-sm">
           <input type="text" [id]="'task-title-' + task.id" #title placeholder="Name"
             class="edit-input-text"
             [value]="editTitle()" />
 
-          <input type="text" #description placeholder="Description"
-            class="edit-input-text"
-            [value]="editDescription()" />
+          <textarea type="text" #description placeholder="Description"
+            class="edit-input-textarea min-h-10 max-h-24"
+            [value]="editDescription()" ></textarea>
         </div>
 
         <div class="flex flex-col justify-center">
@@ -207,63 +210,27 @@
       </div>
     </form>
     } @else {
-    <button type="button"
-      class="icon-button absolute top-4 right-2 rounded-3xl flex flex-col items-center p-2 border border-primary bg-surface opacity-0 pointer-events-none text-primary shadow-sm transition duration-150 transform group-hover:opacity-100 group-hover:pointer-events-auto group-hover:scale-105 hover:bg-surface-hover hover:shadow-md active:scale-95"
-      [class.hidden]="editingTaskId() !== null" (click)="toggleTaskMenu($event, task)" [attr.title]="'Options'">
+
+    <button 
+      #optionsButton
+      type="button"
+      class="icon-button absolute top-1/2 -translate-y-1/2 right-2 rounded-3xl 
+      flex flex-col items-center p-2 border border-primary bg-surface opacity-0 
+      pointer-events-none text-primary shadow-sm group-hover:opacity-100 
+      group-hover:pointer-events-auto group-hover:scale-105 hover:bg-surface-hover 
+      hover:shadow-md active:scale-95"
+      [class.hidden]="editingTaskId() !== null" 
+      (click)="toggleTaskMenu($event, task)" 
+      [attr.title]="'Options'">
       <span class="material-symbols-rounded" style="font-size: 1rem">
         more_vert
       </span>
     </button>
 
-    <!-- Menu -->
-    @if(openTaskMenuId() === task.id) {
-    <div class="absolute right-0 top-12 z-50 w-48 rounded-lg border border-border
-            bg-surface shadow-lg overflow-hidden" (click)="$event.stopPropagation()">
+    <input type="checkbox" [checked]="task.completed" (change)="toggleTaskCompleted(task)" class="round-checkbox" />
 
-      <button class="w-full px-3 py-2 text-left text-sm hover:bg-surface-hover" (click)="editFromMenu(task)">
-        <span class="material-symbols-rounded align-middle text-sm" style="font-size: 15px;">
-          edit
-        </span>
-        Edit
-      </button>
-
-      <button class="w-full px-3 py-2 text-left text-sm hover:bg-surface-hover"
-        (click)="moveTaskToWeek(task, 'previous')">
-        <span class="material-symbols-rounded align-middle text-sm" style="font-size: 15px;">
-          arrow_left_alt
-        </span>
-        Move to Previous Week
-      </button>
-
-      <button class="w-full px-3 py-2 text-left text-sm hover:bg-surface-hover" (click)="moveTaskToWeek(task, 'next')">
-        <span class="material-symbols-rounded align-middle text-sm" style="font-size: 15px;">
-          arrow_right_alt
-        </span>
-        Move to Next Week
-      </button>
-<!-- 
-      <button class="w-full px-3 py-2 text-left text-sm hover:bg-surface-hover">
-        <span class="material-symbols-rounded align-middle text-sm" style="font-size: 15px;">
-          swap_horiz
-        </span>
-        Move to Date
-      </button> -->
-
-      <button class="w-full px-3 py-2 text-left text-sm text-danger hover:bg-surface-hover"
-        (click)="deleteFromMenu(task)">
-        <span class="material-symbols-rounded align-middle text-sm">
-          delete
-        </span>
-        Delete
-      </button>
-
-    </div>
-    }
-
-    <input type="checkbox" [checked]="task.completed" (change)="toggleTaskCompleted(task)" class="round-checkbox mt-1" />
-
-    <span>
-      <span class="flex items-center gap-2">
+    <span class="flex-1 min-w-0 overflow-hidden">
+      <span class="flex flex-wrap items-center gap-2">
         <h1 class="font-semibold text-text text-sm truncate"
           [ngClass]="task.completed ? 'line-through text-text-secondary' : ''">
           {{ task.title }}
@@ -284,11 +251,9 @@
         }
       </span>
 
-      <p class="text-sm text-text-secondary text-wrap truncate">
+      <p class="text-sm text-text-secondary line-clamp-2">
         {{ task.description }}
       </p>
-
-      
     </span>
     
     }
@@ -301,3 +266,11 @@
       'arrow_forward_ios'}}</i>
   </button>
 </ng-template>
+
+
+@if (selectedTask()) {
+  <app-task-dialog
+    [task]="selectedTask()!"
+    (closed)="selectedTask.set(null)"
+    ></app-task-dialog>
+}

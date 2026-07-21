@@ -11,11 +11,15 @@ import { SettingsService } from '../../services/settings.service';
 import { FormsModule } from '@angular/forms';
 import { formatTasksForClipboard } from '../../helpers/clipboard.helper';
 import { DialogService } from '../../services/dialog.service';
+import { TaskDialog } from '../task-dialog/task-dialog';
+import { Overlay, OverlayModule, OverlayRef } from '@angular/cdk/overlay';
+import { ComponentPortal } from '@angular/cdk/portal';
+import { OptionsMenu } from '../options-menu/options-menu';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, DragDropModule, FormsModule],
+  imports: [CommonModule, DragDropModule, FormsModule, TaskDialog, OverlayModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
@@ -27,6 +31,8 @@ export class HomeComponent {
   private settingsService = inject(SettingsService);
   private router = inject(Router);
   private dialog = inject(DialogService);
+  private overlay = inject(Overlay);
+  private overlayRef?: OverlayRef;
 
   protected readonly today = new Date().toISOString().split('T')[0];
   protected readonly loadError = signal<string | null>(null);
@@ -35,31 +41,33 @@ export class HomeComponent {
   protected readonly draftTask = signal<TaskCard | null>(null);
   protected readonly editTitle = signal('');
   protected readonly editDescription = signal('');
-  protected readonly editTagId = signal<number | undefined>(undefined);
+  protected readonly editTagId = signal<string | undefined>(undefined);
   protected readonly editDeadline = signal('');
   protected readonly selectedWeekDate = signal(new Date())
   protected readonly deleteDropActive = signal(false);
+
   protected readonly openTaskMenuId = signal<number | null>(null);
+  protected readonly selectedTask = signal<TaskCard | null>(null);
 
   protected readonly tasks = this.tasksService.tasks;
   protected readonly tags = this.tagService.tags;
   protected readonly settings = this.settingsService.settings;
 
-  protected readonly showCompleted = computed(()=> this.settings().showCompleted);
-  protected readonly showDeadlineOnCopy = computed(()=> this.settings().showDeadlineOnCopy);
+  protected readonly showCompleted = computed(() => this.settings().showCompleted);
+  protected readonly showDeadlineOnCopy = computed(() => this.settings().showDeadlineOnCopy);
 
   days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
   protected readonly weekDays = computed(() => this.dateService.getWeekDates(this.selectedWeekDate())
-);
+  );
   protected readonly visibleWeekContainsToday = computed(() =>
     this.weekDays().some(day => this.getDateKey(day) === this.today)
   );
 
   @HostListener('document:click')
-    onDocumentClick() {
-      this.openTaskMenuId.set(null);
-    }
+  onDocumentClick() {
+    this.openTaskMenuId.set(null);
+  }
 
   constructor() {
     effect(() => {
@@ -100,6 +108,7 @@ export class HomeComponent {
     this.tasksService.updateTask(task.id, { completed: !task.completed });
   }
 
+
   moveTaskToWeek(task: TaskCard, direction: 'previous' | 'next'): void {
     const currentDate = new Date(task.date);
     const targetDate = new Date(currentDate);
@@ -107,31 +116,102 @@ export class HomeComponent {
 
     this.tasksService.updateTask(task.id, { date: this.getDateKey(targetDate) });
 
-    this.navigateWeek(direction); 
-    this.openTaskMenuId.set(null);
+    this.navigateWeek(direction);
   }
+
 
   moveTaskToDate(task: TaskCard, targetDate: string): void {
     this.tasksService.updateTask(task.id, { date: targetDate });
     this.openTaskMenuId.set(null);
   }
 
-  toggleTaskMenu(event: Event, task: TaskCard): void {
+
+  toggleTaskMenu(event: MouseEvent, task: TaskCard): void {
     event.stopPropagation();
 
-    if (this.editingTaskId()) {
-      return;
-    }
+    this.closeMenu();
 
-    this.openTaskMenuId.update(openTaskId =>
-      openTaskId === task.id ? null : task.id
-    );
+    const button = event.currentTarget as HTMLElement;
+    const position = button.getBoundingClientRect();
+
+    this.overlayRef = this.overlay.create({
+      positionStrategy: this.overlay
+        .position()
+        .flexibleConnectedTo(button)
+        .withPositions([
+          {
+            originX: 'end',
+            originY: 'bottom',
+            overlayX: 'end',
+            overlayY: 'top',
+            offsetY: 8
+          },
+          {
+            originX: 'end',
+            originY: 'top',
+            overlayX: 'end',
+            overlayY: 'bottom',
+            offsetY: -8
+          }
+        ]),
+      hasBackdrop: true,
+      backdropClass: 'cdk-overlay-transparent-backdrop'
+    });
+
+    const portal = new ComponentPortal(OptionsMenu);
+
+    const component = this.overlayRef.attach(portal);
+
+    component.instance.task = task;
+
+    component.instance.view.subscribe(() => {
+      this.viewTask(task);
+      this.closeMenu();
+    });
+
+    component.instance.edit.subscribe(() => {
+      this.editFromMenu(task);
+      this.closeMenu();
+    });
+
+    component.instance.previous.subscribe(() => {
+      this.moveTaskToWeek(task, 'previous');
+      this.closeMenu();
+    });
+
+    component.instance.next.subscribe(() => {
+      this.moveTaskToWeek(task, 'next');
+      this.closeMenu();
+    });
+
+    component.instance.delete.subscribe(() => {
+      this.deleteFromMenu(task);
+      this.closeMenu();
+    });
+
+    this.overlayRef.backdropClick().subscribe(() => {
+      this.closeMenu();
+    });
   }
+
+
+  closeMenu(): void {
+    this.overlayRef?.dispose();
+    this.overlayRef = undefined;
+  }
+
+
+  viewTask(task: TaskCard): void {
+    this.selectedTask.set(task);
+    this.openTaskMenuId.set(null);
+  }
+
 
   editFromMenu(task: TaskCard): void {
     this.startEdit(task);
     this.openTaskMenuId.set(null);
   }
+
 
   async deleteFromMenu(task: TaskCard): Promise<void> {
     const confirmed = await this.dialog.open({
@@ -149,7 +229,8 @@ export class HomeComponent {
     this.tasksService.deleteTask(task.id);
     this.openTaskMenuId.set(null);
   }
-  
+
+
   protected setDeadline(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.editDeadline.set(input.value);
@@ -170,15 +251,25 @@ export class HomeComponent {
     this.deadlinePickerTaskId.set(null);
     this.editTitle.set(task.title);
     this.editDescription.set(task.description);
-    this.editTagId.set(task.tag?.id);
+    this.editTagId.set(task.tagId);
     this.editDeadline.set(task.deadline ?? '');
 
     setTimeout(() => {
-      document.getElementById(`task-title-${task.id}`)?.focus();
-    });
+      document.getElementById(`task-${task.id}`)
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+
+      document.getElementById(`task-${task.id}`)?.focus();
+    },100);
   }
 
-  private commitEdit(id: number, date: string, title: string, description: string, tagId: number, deadline: string): void {
+
+  saveForm(event: Event, id: number, date: string, title: string, description: string, tagId: string, deadline: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (this.editingTaskId() !== id) {
       return;
     }
@@ -206,6 +297,7 @@ export class HomeComponent {
       description: nextDescription,
       completed,
       tag: nextTag,
+      tagId: nextTag?.id,
       deadline: nextDeadline || undefined
     };
 
@@ -216,12 +308,6 @@ export class HomeComponent {
     }
 
     this.cancelEdit();
-  }
-
-  saveForm(event: Event, id: number, date: string, title: string, description: string, tagId: string, deadline: string): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.commitEdit(id, date, title, description, Number(tagId), deadline);
   }
 
 
@@ -251,7 +337,7 @@ export class HomeComponent {
     this.editDeadline.set('');
   }
 
-    onTaskDrop(event: CdkDragDrop<string>): void {
+  onTaskDrop(event: CdkDragDrop<string>): void {
     const task = event.item.data as TaskCard | undefined;
     const targetDate = event.container.data;
 
@@ -270,12 +356,12 @@ export class HomeComponent {
   async onDeleteDrop(event: CdkDragDrop<string>): Promise<void> {
     const task = event.item.data as TaskCard | undefined;
     this.deleteDropActive.set(false);
-    
+
     if (!task) {
       return;
     }
 
-  const confirmed = await this.dialog.open({
+    const confirmed = await this.dialog.open({
       title: 'Delete Task',
       message: 'Are you sure you want to delete this task?',
       confirmText: 'Delete',
@@ -314,5 +400,4 @@ export class HomeComponent {
     this.cancelEdit();
     this.router.navigate(['/settings']);
   }
-
 }

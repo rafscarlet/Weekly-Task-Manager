@@ -1,0 +1,28 @@
+<div class="w-48 rounded-lg border border-border bg-surface shadow-lg overflow-hidden">
+
+    <button class="menu-option" (click)="view.emit()">
+    <span class="material-symbols-rounded menu-icon">info</span>
+    View Details
+    </button>
+
+    <button class="menu-option" (click)="edit.emit()">
+    <span class="material-symbols-rounded menu-icon">edit</span>
+    Edit
+    </button>
+
+    <button class="menu-option" (click)="previous.emit()">
+    <span class="material-symbols-rounded menu-icon">arrow_left_alt</span>
+    Move Previous Week
+    </button>
+
+    <button class="menu-option" (click)="next.emit()">
+    <span class="material-symbols-rounded menu-icon">arrow_right_alt</span>
+    Move Next Week
+    </button>
+
+    <button class="menu-option text-danger"
+            (click)="delete.emit()">
+    <span class="material-symbols-rounded menu-icon">delete</span>
+    Delete
+    </button>
+</div>

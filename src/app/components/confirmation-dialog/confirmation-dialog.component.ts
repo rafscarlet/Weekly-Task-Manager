@@ -4,8 +4,8 @@ import { DialogService } from '../../services/dialog.service';
 @Component({
   selector: 'app-dialog',
   imports: [],
-  templateUrl: './dialog.component.html',
+  templateUrl: './confirmation-dialog.component.html',
 })
-export class DialogComponent {
+export class ConfirmationDialogComponent {
   dialog = inject(DialogService);
 }

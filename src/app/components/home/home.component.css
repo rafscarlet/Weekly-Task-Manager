@@ -39,15 +39,3 @@
   border-color: rgb(var(--on-primary) / 0.32);
 }
 
-.edit-input-text {
-  width: 100%;
-  background-color: transparent;
-  border: none;
-  border-bottom: 2px solid rgb(var(--border));
-  color: rgb(var(--text));
-}
-
-.edit-input-text:focus {
-  outline: none;
-  border-bottom: 2px solid rgb(var(--primary));
-}

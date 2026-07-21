@@ -31,7 +31,7 @@ export class TagService {
         const electronTags = await window.electronTags?.loadTags();
         
         if (electronTags) {
-          this._tags.set(electronTags);
+          this._tags.set(electronTags.filter(tag => tag.id !== undefined && typeof tag.id === 'string'));
           return;
         }
       } catch (error) {

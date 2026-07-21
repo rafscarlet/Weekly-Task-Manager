@@ -6,20 +6,24 @@ export type Settings = {
 }
 
 export type TagCategory = {
-  id: number;
+  id: string;
   name: string;
   color: string;
 }
 
-export type TaskCard = {
+export interface Task {
   id: number;
   date: string;
   title: string;
   description: string;
   completed: boolean;
   deadline?: string;
+  tagId?: string;
+}
+
+export interface TaskCard extends Task {
   tag?: TagCategory;
-};
+}
 
 export type DialogOptions ={
   title: string;

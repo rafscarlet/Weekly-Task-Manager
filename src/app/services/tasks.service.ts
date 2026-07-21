@@ -1,11 +1,12 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { TaskCard } from '../types/all-types';
+import { effect, inject, Injectable, signal } from '@angular/core';
+import { TagCategory, Task, TaskCard } from '../types/all-types';
 import { ToastService } from './toast.service';
+import { TagService } from './tag.service';
 
 
 type ElectronTasksApi = {
-  loadTasks: () => Promise<TaskCard[] | null>;
-  saveTasks: (tasks: TaskCard[]) => void;
+  loadTasks: () => Promise<Task[] | null>;
+  saveTasks: (tasks: Task[]) => void;
 };
 
 declare global {
@@ -19,9 +20,24 @@ declare global {
 })
 export class TasksService {
   private toastService = inject(ToastService);
+  private tagService = inject(TagService);
   private readonly _tasks = signal<TaskCard[]>([]);
+  private readonly _tags = signal<TagCategory[]>([]);
 
   constructor() {
+    effect(() => {
+      const tags = this.tagService.tags();
+      
+      if (tags.length > 0) {
+        this._tasks.update(tasks =>
+          tasks.map(task => ({
+            ...task,
+            tag: tags.find(tag => tag.id === task.tagId),
+          }))
+        );
+      }
+    });
+
     this.fetchTasks();
   }
 
@@ -35,7 +51,6 @@ export class TasksService {
 
       if (electronTasks) {
         this._tasks.set(electronTasks);
-        return;
       }
     } catch (error) {
       throw error;
@@ -43,7 +58,10 @@ export class TasksService {
   }
 
   addTask(task: TaskCard): void {
-    this.updateTasks(tasks => [...tasks, task]);
+    this.updateTasks(tasks => [
+      ...tasks,
+      this.toStoredTask(task)
+    ]);
     this.toastService.showSuccess('Task created!');
   }
 
@@ -63,9 +81,25 @@ export class TasksService {
   private updateTasks(updater: (tasks: TaskCard[]) => TaskCard[]): void {
     this._tasks.update(tasks => {
       const nextTasks = updater(tasks);
-      window.electronTasks?.saveTasks(nextTasks);
+      window.electronTasks?.saveTasks(
+        nextTasks.map(task => this.toStoredTask(task))
+      );
+
       return nextTasks;
     });
+  }
+
+  // Helper to convert TaskCard to Task for storage
+  private toStoredTask(task: TaskCard): Task {
+    return {
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      date: task.date,
+      completed: task.completed,
+      deadline: task.deadline,
+      tagId: task.tag?.id.toString()
+    };
   }
 
 }

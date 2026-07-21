@@ -239,6 +239,28 @@
     cursor: pointer;
   }
 
+    
+  .edit-input-text, .edit-input-textarea {
+    width: 100%;
+    padding: 0.1rem;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid rgb(var(--border));
+    color: rgb(var(--text));
+  }
+
+  .edit-input-text:focus {
+    outline: none;
+    border-bottom: 2px solid rgb(var(--primary));
+  }
+
+  .edit-input-textarea:focus {
+    outline: none;
+    border: 2px solid rgb(var(--primary));
+    border-radius: 0.3rem;
+  }
+
+
 }
 
 @layer utilities {

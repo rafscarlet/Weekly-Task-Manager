@@ -12,10 +12,6 @@ header {
     height: 5rem;
 }
 
-.app-header {
-    position: relative;
-}
-
 .header-title {
     display: flex;
     align-items: center;
@@ -27,7 +23,28 @@ header {
     color: rgb(var(--on-primary));
 }
 
+footer {
+    display: flex;
+    align-items: center;
+    justify-content: end;
+
+    background-color: rgb(var(--surface));
+    color: rgb(var(--text-disabled));
+    font-size: 0.9rem;
+
+    padding: 1rem;
+    text-align: center;
+    height: 2rem;
+}
+
 #main {
-    height: calc(100vh - 5rem);
+    height: calc(100vh - 5rem - 2rem);
     width: 100%;
+}
+
+a {
+    color: rgb(var(--primary));
+    text-decoration: none;
+
+    transition: color 150ms ease;
 }
