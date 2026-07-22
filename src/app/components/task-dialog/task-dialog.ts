@@ -1,9 +1,10 @@
 import { Component, Input, Output, EventEmitter} from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { TaskCard } from '../../types/all-types';
 
 @Component({
   selector: 'app-task-dialog',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './task-dialog.html',
 })
 export class TaskDialog {

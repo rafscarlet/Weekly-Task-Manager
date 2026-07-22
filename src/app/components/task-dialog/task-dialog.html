@@ -14,9 +14,9 @@
 
         @if (task.tag) {
           <span
-            class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold text-on-primary"
+            class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold text-on-primary"
             [style.background]="task.tag.color">
-            {{ task.tag.name }}
+            {{ task.tag.name | uppercase }}
           </span>
         }
       </div>

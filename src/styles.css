@@ -192,6 +192,11 @@
     border-radius: 0.25rem;
   }
 
+  .input-text:focus {
+    outline: none;
+    border: 2px solid var(--color-primary)
+  }
+
   .round-checkbox {
     appearance: none;
     -webkit-appearance: none;
@@ -269,11 +274,11 @@
     background: rgb(var(--surface));
     color: rgb(var(--text));
     border: 1px solid rgb(var(--border));
-    box-shadow: 0 10px 30px rgb(var(--text) / 0.12);
+    box-shadow: 2px 5px 10px rgb(var(--text) / 0.12);
   }
 
   .cdk-drag-placeholder {
-    opacity: 1;
+    opacity: 0;
   }
 
 }

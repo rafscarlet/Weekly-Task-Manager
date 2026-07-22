@@ -60,7 +60,7 @@ export class SettingsPage {
 
   addTag(){
     const currentTags = this.localTags();
-    const newId = 'tempId';
+    const newId = 'tempId' + Date.now() + Math.floor(Math.random() * 1000);
     this.localTags.set([...currentTags, {id: newId, name: '', color: '#ff0000' }]);
   }
 
