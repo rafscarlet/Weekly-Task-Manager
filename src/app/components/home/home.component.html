@@ -233,14 +233,23 @@
     <span class="flex-1 min-w-0 overflow-hidden">
       <span class="flex flex-wrap items-center gap-2">
         <h1 class="font-semibold text-text text-sm truncate"
-          [ngClass]="task.completed ? 'line-through text-text-secondary' : ''">
+          [ngClass]="task.completed ? 'line-through text-text-secondary' : ''"
+          [attr.title]="task.title">
           {{ task.title }}
         </h1>
 
         @if (task.tag) {
-        <span class="text-xs font-bold text-on-primary px-2 py-1 rounded-full" [style.background]="task.tag.color" style="font-size: 10px">
-          {{ task.tag.name | uppercase }}
-        </span>
+        <span class="text-xs font-bold text-on-primary px-2 py-1 rounded-full" 
+        [style.background]="task.tag.color" style="font-size: 10px"
+        [attr.title]="task.tag.name">
+          @if (task.tag.icon){
+            <img
+              [src]="'app-icon://' + task.tag.icon"
+              class="w-4 h-4 rounded object-cover inline-block"/>
+          }@else{
+            {{ task.tag.name | uppercase }}
+          }
+          </span>
         }
         @if (task.deadline) {
         <span class="flex items-center gap-1 text-danger whitespace-nowrap"
@@ -252,7 +261,7 @@
         }
       </span>
 
-      <p class="text-sm text-text-secondary line-clamp-2">
+      <p class="text-sm text-text-secondary line-clamp-2" [attr.title]="task.description">
         {{ task.description }}
       </p>
     </span>

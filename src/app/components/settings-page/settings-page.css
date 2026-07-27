@@ -6,9 +6,20 @@
 
     width: 100%;
     padding-block: 0.5rem;
-    margin-top: 0.8rem;
+    margin-top: 1rem;
 
     color: rgb(var(--text));
+}
+
+.section-desc {
+    font-size: 0.85rem;
+    margin-top: -0.25rem;
+
+    padding: 0rem 0.5rem 0.5rem;
+    width: 100%;
+
+    font-style: italic;
+    color: rgb(var(--text-secondary));
 }
 
 .section-field {
@@ -16,6 +27,7 @@
     flex-direction: row;
     gap: 1rem;
     align-items: center;
+    padding: 0.2rem 0.25rem;
 
     font-size: 1rem;
     font-weight: 500;
@@ -26,6 +38,7 @@
 .submit-btn {
     background-color: rgb(var(--primary));
     color: rgb(var(--on-primary));
+    font-weight: 700;
 
     padding: 0.5rem;
     border: none;
@@ -52,7 +65,7 @@
 
     cursor: pointer;
 
-    border: 2px solid transparent;
+    border: 2px solid var(--color-surface);
 
     transition:
         color 150ms ease,

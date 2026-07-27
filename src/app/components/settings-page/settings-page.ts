@@ -6,7 +6,6 @@ import {FormsModule} from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
 import { ToastService } from '../../services/toast.service';
 import { DialogService } from '../../services/dialog.service';
-
 @Component({
   selector: 'app-settings-page',
   imports: [FormsModule],
@@ -52,6 +51,46 @@ export class SettingsPage {
     this.localTags().find(tag => tag.id === id)!.color = newColor;
   }
 
+  setAsPreselected(id: string) {
+    this.localTags.update(tags =>
+      tags.map(tag =>
+        tag.id === id
+          ? { ...tag, preselected: true }
+          : { ...tag, preselected: false }
+      )
+    );
+  }
+
+  clearPreselected() {
+    this.localTags.update(tags =>
+      tags.map(tag => ({ ...tag, preselected: false }))
+    );
+  }
+
+  async selectIcon(id: string) {
+    const file = await window.electronAssets?.selectImage();
+
+    if (!file) {
+      return;
+    }
+
+    this.localTags.update(tags =>
+      tags.map(tag =>
+        tag.id === id
+          ? { ...tag, icon: file }
+          : tag
+      )
+    );
+  }
+
+  removeIcon(id: string) {
+    this.localTags.update(tags =>
+      tags.map(tag =>
+        tag.id === id ? { ...tag, icon: undefined } : tag
+      )
+    );
+  }
+
   updateName(event: Event, id: string) {
     const input = event.target as HTMLInputElement;
     const newName = input.value;
@@ -73,10 +112,9 @@ export class SettingsPage {
     event.preventDefault();
 
     const tagsWithValidIds = this.localTags().map(tag => {
-      const newId = `${tag.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}-${tag.color}`;
+      const newId = crypto.randomUUID();
       return ({ ...tag, id: tag.id.startsWith('tempId') ? newId : tag.id })
     });
-    // console.log('Tags with valid IDs:', tagsWithValidIds);
     this.tagService.saveTags(tagsWithValidIds);
     this.settingsService.updateSettings(() => this.localSettings());
     this.toastService.showSuccess('Settings saved successfully!'); 

@@ -10,6 +10,27 @@
     Edit
     </button>
 
+    <button class="menu-option" (click)="duplicate.emit()">
+    <span class="material-symbols-rounded menu-icon">content_copy</span>
+    Duplicate
+    </button>
+
+    <button class="menu-option" (click)="openDatePicker($event)">
+    <span class="material-symbols-rounded menu-icon">date_range</span>
+    Move to Date
+    </button>
+
+    @if (datePickerOpen()) {
+        <div class="px-3 py-2 border-t border-border">
+            <input
+            type="date"
+            class="w-full rounded-lg border border-border bg-surface text-text p-2 text-sm"
+            [value]="selectedDate()"
+            (change)="selectDate($event)"
+            />
+        </div>
+    }
+
     <button class="menu-option" (click)="previous.emit()">
     <span class="material-symbols-rounded menu-icon">arrow_left_alt</span>
     Move Previous Week

@@ -14,6 +14,10 @@ contextBridge.exposeInMainWorld("electronTags", {
   saveTags: (tags) => ipcRenderer.send("tags:save", tags)
 });
 
+contextBridge.exposeInMainWorld("electronAssets", {
+  selectImage: () => ipcRenderer.invoke("select-image"),
+});
+
 contextBridge.exposeInMainWorld("electronSettings", {
   loadSettings: () => ipcRenderer.invoke("settings:load"),
   saveSettings: (settings) => ipcRenderer.send("settings:save", settings)

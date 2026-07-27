@@ -71,6 +71,7 @@ export class HomeComponent {
 
   constructor() {
     effect(() => {
+      this.tasks();
       // console.log('Today is:', this.today);
       // console.log('tasks:', this.tasks());
       // console.log('tags:', this.tags());
@@ -171,6 +172,16 @@ export class HomeComponent {
 
     component.instance.edit.subscribe(() => {
       this.editFromMenu(task);
+      this.closeMenu();
+    });
+
+     component.instance.duplicate.subscribe(() => {
+      this.tasksService.addTask({ ...task, id: crypto.randomUUID().split('-').pop() as unknown as number });
+      this.closeMenu();
+    });
+
+     component.instance.moveToDate.subscribe((date) => {
+      this.moveTaskToDate(task, date);
       this.closeMenu();
     });
 
@@ -279,8 +290,8 @@ export class HomeComponent {
 
     const nextTitle = title.trim();
     const nextDescription = description.trim();
-    const nextTag = this.tags().find(tag => tag.id === tagId) || undefined
-    const nextDeadline = deadline.trim();
+    const nextTag =this.tags().find(tag => tag.id === tagId) ?? draftTask?.tag ?? undefined;
+    const nextDeadline = deadline.trim() || undefined;
     const completed = this.tasks().find(task => task.id === id)?.completed || false;
 
     if (!nextTitle) {
@@ -297,9 +308,15 @@ export class HomeComponent {
       description: nextDescription,
       completed,
       tag: nextTag,
-      tagId: nextTag?.id,
-      deadline: nextDeadline || undefined
+      tagId: nextTag?.id ?? tagId,
+      deadline: nextDeadline
     };
+
+    console.log({
+      tagId,
+      nextTag,
+      taskChanges
+    });
 
     if (isDraftTask) {
       this.tasksService.addTask({ ...draftTask, ...taskChanges });
@@ -315,13 +332,16 @@ export class HomeComponent {
     if (this.editingTaskId()) {
       return;
     }
-    const newId = this.tasks().length > 0 ? Math.max(...this.tasks().map(t => t.id)) + 1 : 1;
+    const newId = crypto.randomUUID().split('-').pop() as unknown as number;
+    const preselectedTag = this.tags().find(tag => tag.preselected);
     const newTask: TaskCard = {
       id: newId,
       date: date,
       title: '',
       description: '',
-      completed: false
+      completed: false, 
+      tag: preselectedTag,
+      tagId: preselectedTag?.id,
     };
     this.draftTask.set(newTask);
     this.startEdit(newTask);

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal, ViewEncapsulation } from '@angular/core';
 import { TaskCard } from '../../types/all-types';
 
 @Component({
@@ -29,9 +29,36 @@ import { TaskCard } from '../../types/all-types';
 export class OptionsMenu {
   @Input({ required: true }) task!: TaskCard;
 
+  datePickerOpen = signal(false);
+  selectedDate = signal('');
+
   @Output() view = new EventEmitter<void>();
   @Output() edit = new EventEmitter<void>();
+  @Output() duplicate = new EventEmitter<void>();
+  @Output() moveToDate = new EventEmitter<string>();
   @Output() previous = new EventEmitter<void>();
   @Output() next = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();  
+
+  openDatePicker(event: Event) {
+    event.stopPropagation();
+
+    if(this.datePickerOpen()) {
+      this.datePickerOpen.set(false);
+      return;
+    }
+    this.selectedDate.set(this.task.date);
+    this.datePickerOpen.set(true);
+  }
+
+  selectDate(event: Event) {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.value) {
+      return;
+    }
+
+    this.moveToDate.emit(input.value);
+  }
+
 }

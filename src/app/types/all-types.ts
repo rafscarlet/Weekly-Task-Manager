@@ -9,6 +9,8 @@ export type TagCategory = {
   id: string;
   name: string;
   color: string;
+  icon?: string;
+  preselected?: boolean;
 }
 
 export interface Task {

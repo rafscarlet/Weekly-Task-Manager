@@ -3,7 +3,7 @@
 </button>
 
 <div class="flex flex-col items-center overflow-y-auto h-full w-full gap-4">
-    <form class="flex flex-col gap-5 w-1/3 md:w-1/2" (submit)="saveSettings($event)">
+    <form class="flex flex-col gap-3 w-1/3 md:w-1/2" (submit)="saveSettings($event)">
         <!-- General -->
         <div class="section-header">General</div>
 
@@ -29,38 +29,82 @@
 
         <!-- Tags -->
         <div class="section-header">Tag Categories</div>
+        <div class="section-desc">Click on the index of the that tag you want to set as <span class="text-primary font-semibold">preselected</span> in your task form dropdown. :)
+        <br> Instead, click <span class="text-danger font-semibold hover:cursor-pointer" (click)="clearPreselected()">here</span> to remove any preselected task rules.</div>
 
-        @for (tag of localTags(); track $index){
+        <div class="flex flex-col gap-1 justify-center">
+            @for (tag of localTags(); track $index){
 
-        <div class="section-field justify-between">
-            <div class="section-field">
-                <label class="text-text"> {{$index + 1}}. </label>
+            <div class="section-field justify-between"
+                [class]="tag?.preselected? 'bg-primary/10 border-2 border-primary rounded-lg' : 'border-2 border-transparent rounded-lg'"
+                >
+                <div class="section-field">
+                    <label
+                    class="flex items-center justify-center text-text icon-button hover:text-primary cursor-pointer h-10 w-7 -mr-2"
+                    (click)="setAsPreselected(tag.id)"
+                    >
+                    {{$index + 1}}.
+                    </label>
 
-                <input type="text" [name]="`category-name-${$index}`" [value]="tag.name"
-                    (input)="updateName($event, tag.id)" placeholder="Name" class="input-text max-w-50" />
+                    <input type="text" [name]="`category-name-${$index}`" [value]="tag.name"
+                        (input)="updateName($event, tag.id)" placeholder="Name" class="input-text w-40" />
 
-                <span class="text-sm text-text-secondary"> Color: </span>
+                    <span class="text-sm text-text-secondary"> Icon: </span>
 
-                <input type="color" [value]="tag.color" (input)="updateColor($event, tag.id)"
-                    class="w-10 h-10 min-w-7 hover:cursor-pointer border border-border rounded" />
+                    <div class="flex items-center gap-1 w-20">
+                        <button
+                            type="button"
+                            (click)="selectIcon(tag.id)"
+                            class="p-2 flex-1 text-text-secondary text-sm rounded border border-border min-w-10 
+                            hover:bg-primary/10 hover:border-primary hover:text-text"
+                            title="Select Icon">
+                            @if(tag.icon) {
+                                <img
+                                    [src]="'app-icon://' + tag.icon"
+                                    class="w-6 h-6 rounded object-cover"
+                                    [attr.title]="tag.icon"
+                                />
+                            }@else { Upload }
+                        </button>
+                        @if (tag.icon){
+                            <button
+                                type="button"
+                                (click)="removeIcon(tag.id)"
+                                class="flex-1 text-danger flex items-center p-1 icon-button"
+                                title="Clear Icon">
+                                <i class="material-symbols-rounded">clear</i>
+                            </button>
+                        }
+                    </div>
 
-                <span class="text-text-secondary text-sm"> {{tag.color}} </span>
+                    <span class="text-sm text-text-secondary"> Color: </span>
+
+                    <input type="color" [value]="tag.color" (input)="updateColor($event, tag.id)"
+                        class="w-10 h-10 min-w-7 hover:cursor-pointer border border-border rounded" title="Select Color"/>
+
+                    <span class="text-text-disabled text-sm"> {{tag.color}} </span>
+
+
+                </div>
+                    <span class="w-20">
+                        @if(tag.preselected) {
+                            <span class="text-sm flex items-center gap-1 tracking-wide"> <i class="material-symbols-rounded text-yellow-500">star</i> Preselected </span>
+                        }@else {}
+                    </span>
+                <button type="button" class="remove-btn icon-button" (click)="deleteTag(tag.id)">
+                    <i class="material-symbols-rounded"> delete </i>
+                </button>
             </div>
+            }
 
-            <button type="button" class="remove-btn icon-button" (click)="deleteTag(tag.id)">
-                <i class="material-symbols-rounded"> delete </i>
+            <button type="button"
+                class="flex items-center gap-2 w-40 p-2 rounded border-2 border-transparent text-primary hover:bg-primary/10 hover:border-primary"
+                (click)="addTag()">
+                <i class="material-symbols-rounded"> add </i>
+
+                Add Category
             </button>
         </div>
-
-        }
-
-        <button type="button"
-            class="flex items-center gap-2 w-40 p-2 rounded border-2 border-transparent text-primary hover:bg-primary/10 hover:border-primary"
-            (click)="addTag()">
-            <i class="material-symbols-rounded"> add </i>
-
-            Add Category
-        </button>
 
         <!-- Export Options -->
         <div class="section-header">Copy to Clipboard</div>

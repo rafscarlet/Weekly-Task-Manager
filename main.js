@@ -6,8 +6,10 @@ process.on("unhandledRejection", (error) => {
   console.error("Unhandled rejection:", error);
 });
 
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, protocol} = require("electron");
 const { autoUpdater } = require("electron-updater");
+const crypto = require("crypto");
+
 
 const fs = require("fs");
 const path = require("path");
@@ -87,6 +89,48 @@ ipcMain.on("tags:save", (_event, tags) => {
   saveTags(Array.isArray(tags) ? tags : []);
 });
 
+// Icons
+
+function getIconsFolderPath() {
+  return path.join(app.getPath("userData"), "icons");
+}
+
+ipcMain.handle("select-image", async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: [
+      {
+        name: "Images",
+        extensions: ["png", "jpg", "jpeg", "svg"]
+      }
+    ]
+  });
+
+  if (result.canceled) {
+    return null;
+  }
+
+  const sourcePath = result.filePaths[0];
+
+  const iconsFolder = getIconsFolderPath();
+
+  if (!fs.existsSync(iconsFolder)) {
+    fs.mkdirSync(iconsFolder, { recursive: true });
+  }
+
+  const extension = path.extname(sourcePath);
+  const filename = `${crypto.randomUUID()}${extension}`;
+
+  const destinationPath = path.join(
+    iconsFolder,
+    filename
+  );
+
+  fs.copyFileSync(sourcePath, destinationPath);
+
+  return filename;
+});
+
 // Settings
 function getSettingsFilePath() {
   return path.join(app.getPath("userData"), "settings.json");
@@ -117,11 +161,12 @@ ipcMain.on("settings:save", (_event, settings) => {
 });
 
 
+// window 
 
 function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
-    height: 800,
+    height: 1000,
     minWidth: 1200,
     minHeight: 800,
     show: false,
@@ -136,6 +181,13 @@ function createWindow() {
   win.once("ready-to-show", () => {
     win.maximize();
     win.show();
+  });
+
+  win.webContents.on("will-navigate", (event, url) => {
+    if (url !== win.webContents.getURL()) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
   });
 
   const devServerUrl = process.env.ELECTRON_START_URL;
@@ -179,7 +231,8 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on("update-downloaded", () => {
-      console.log("Update downloaded");
+      console.log("UPDATE DOWNLOADED EVENT FIRED");
+
       dialog.showMessageBox({
         type: "info",
         title: "Update ready",
@@ -194,9 +247,8 @@ function setupAutoUpdater() {
     console.error("Update error:", error);
   });
 
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.checkForUpdates();
 }
-
 
 ////////////// APP //////////////
 
@@ -216,8 +268,36 @@ app.on("window-all-closed", () => {
   }
 });
 
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "app-icon",
+    privileges: {
+      secure: true,
+      supportFetchAPI: true,
+      bypassCSP: true
+    }
+  }
+]);
+
 app.whenReady().then(() => {
   ensureUserDataFolder();
+
+  protocol.handle("app-icon", request => {
+    const filename = decodeURIComponent(
+      request.url.replace("app-icon://", "")
+    );
+
+    const iconPath = path.join(
+      app.getPath("userData"),
+      "icons",
+      filename
+    );
+
+    return require("electron").net.fetch(
+      `file://${iconPath}`
+    );
+  });
+
   createWindow();
 
   setupAutoUpdater();

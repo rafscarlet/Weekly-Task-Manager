@@ -1,4 +1,4 @@
-import { effect, Injectable, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { TagCategory } from '../types/all-types';
 
 type ElectronTagsApi = {
@@ -6,9 +6,14 @@ type ElectronTagsApi = {
   saveTags: (tags: TagCategory[]) => void;
 };
 
+type ElectronAssetsApi = {
+  selectImage: () => Promise<string | null>;
+};
+
 declare global {
   interface Window {
     electronTags?: ElectronTagsApi;
+    electronAssets?: ElectronAssetsApi;
   }
 }
 

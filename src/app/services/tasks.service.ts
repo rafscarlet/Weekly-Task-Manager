@@ -27,15 +27,13 @@ export class TasksService {
   constructor() {
     effect(() => {
       const tags = this.tagService.tags();
-      
-      if (tags.length > 0) {
-        this._tasks.update(tasks =>
-          tasks.map(task => ({
-            ...task,
-            tag: tags.find(tag => tag.id === task.tagId),
-          }))
-        );
-      }
+
+      this._tasks.update(tasks =>
+        tasks.map(task => ({
+          ...task,
+          tag: tags.find(tag => tag.id === task.tagId)
+        }))
+      );
     });
 
     this.fetchTasks();
@@ -50,7 +48,10 @@ export class TasksService {
       const electronTasks = await window.electronTasks?.loadTasks();
 
       if (electronTasks) {
-        this._tasks.set(electronTasks);
+        this._tasks.set(electronTasks.map(task => ({
+          ...task,
+          tag: this.tagService.tags().find(tag => tag.id === task.tagId)
+        })));
       }
     } catch (error) {
       throw error;
@@ -60,7 +61,7 @@ export class TasksService {
   addTask(task: TaskCard): void {
     this.updateTasks(tasks => [
       ...tasks,
-      this.toStoredTask(task)
+      task
     ]);
     this.toastService.showSuccess('Task created!');
   }
@@ -98,7 +99,7 @@ export class TasksService {
       date: task.date,
       completed: task.completed,
       deadline: task.deadline,
-      tagId: task.tag?.id.toString()
+      tagId: task.tag?.id.toString() ?? task.tagId
     };
   }
 
