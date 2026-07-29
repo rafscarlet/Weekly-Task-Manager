@@ -6,10 +6,10 @@ Calendar Tasks is a simple productivity app designed to help you plan your week,
 ## Features 
 
 - [x] Weekly Calendar View 
-- [x] Create, Edit, Complete, Move, Delete Tasks
-- [x] Task Tags with custom colors
+- [x] Create, Edit, Complete, Move, Duplicate, Delete Tasks
+- [x] Task Tags with custom colors and icons
 - [x] Task Deadline with visual indicators 
-- [x] Drag & Drog to move or delete 
+- [x] Drag & Drog functionality to move or delete 
 - [x] Copy Weekly Tasks to Clipboard
 - [x] Customizable Settings 
 - [x] Offline Storage (your data stays on your device)
@@ -22,17 +22,11 @@ Calendar Tasks is a simple productivity app designed to help you plan your week,
 - [ ] Delete/See/Export all saved tasks
 - [ ] Notifications for deadlines
 - [ ] Different color themes 
-- [ ] Move task to specific date
 - [ ] Lock app (add PIN (?))
 - [ ] Add No-Date column -> tasks without a specific date or a date period 
 - [ ] Edit copy to clipboard template (later)
-- [ ] Preselected tags option
-- [ ] Move task to specific date
-- [ ] Duplicate task option
 - [ ] Option to show weekends 
-- [ ] Add tag icon/image/label
 - [ ] Add monthly view
-- [ ] Use enter button to save task
 - [ ] Filter Copy tasks by tag
 
 ## Download 
