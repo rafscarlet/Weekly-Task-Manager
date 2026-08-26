@@ -37,7 +37,8 @@ export class HomeComponent {
   protected readonly today = new Date().toISOString().split('T')[0];
   protected readonly loadError = signal<string | null>(null);
   protected readonly editingTaskId = signal<number | null>(null);
-  protected readonly deadlinePickerTaskId = signal<number | null>(null);
+  protected readonly newTaskId = signal<number | null>(null);
+
   protected readonly draftTask = signal<TaskCard | null>(null);
   protected readonly editTitle = signal('');
   protected readonly editDescription = signal('');
@@ -92,13 +93,10 @@ export class HomeComponent {
       target.setDate(target.getDate() + (direction === 'next' ? 7 : -7));
       return target;
     });
-
-    this.cancelEdit();
   }
 
   protected goToToday(): void {
     this.selectedWeekDate.set(new Date());
-    this.cancelEdit();
   }
 
   protected getDateKey(date: string | number | Date): string {
@@ -171,7 +169,7 @@ export class HomeComponent {
     });
 
     component.instance.edit.subscribe(() => {
-      this.editFromMenu(task);
+      this.editTask(task);
       this.closeMenu();
     });
 
@@ -218,8 +216,9 @@ export class HomeComponent {
   }
 
 
-  editFromMenu(task: TaskCard): void {
-    this.startEdit(task);
+  editTask(task: TaskCard): void {
+    this.selectedTask.set(task);
+    this.editingTaskId.set(task.id);
     this.openTaskMenuId.set(null);
   }
 
@@ -241,93 +240,6 @@ export class HomeComponent {
     this.openTaskMenuId.set(null);
   }
 
-
-  protected setDeadline(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.editDeadline.set(input.value);
-  }
-
-
-  protected toggleDeadlinePicker(event: Event, taskId: number): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    this.deadlinePickerTaskId.update(openTaskId =>
-      openTaskId === taskId ? null : taskId
-    );
-  }
-
-  protected startEdit(task: TaskCard): void {
-    this.editingTaskId.set(task.id);
-    this.deadlinePickerTaskId.set(null);
-    this.editTitle.set(task.title);
-    this.editDescription.set(task.description);
-    this.editTagId.set(task.tagId);
-    this.editDeadline.set(task.deadline ?? '');
-
-    setTimeout(() => {
-      document.getElementById(`task-${task.id}`)
-        ?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-
-      document.getElementById(`task-${task.id}`)?.focus();
-    },100);
-  }
-
-
-  saveForm(event: Event, id: number, date: string, title: string, description: string, tagId: string, deadline: string): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (this.editingTaskId() !== id) {
-      return;
-    }
-
-    const draftTask = this.draftTask();
-    const isDraftTask = draftTask?.id === id;
-
-    const nextTitle = title.trim();
-    const nextDescription = description.trim();
-    const nextTag =this.tags().find(tag => tag.id === tagId) ?? draftTask?.tag ?? undefined;
-    const nextDeadline = deadline.trim() || undefined;
-    const completed = this.tasks().find(task => task.id === id)?.completed || false;
-
-    if (!nextTitle) {
-      if (!isDraftTask) {
-        this.tasksService.deleteTask(id);
-      }
-      this.cancelEdit();
-      return;
-    }
-
-    const taskChanges = {
-      date,
-      title: nextTitle || `Task #${id}`,
-      description: nextDescription,
-      completed,
-      tag: nextTag,
-      tagId: nextTag?.id ?? tagId,
-      deadline: nextDeadline
-    };
-
-    console.log({
-      tagId,
-      nextTag,
-      taskChanges
-    });
-
-    if (isDraftTask) {
-      this.tasksService.addTask({ ...draftTask, ...taskChanges });
-    } else {
-      this.tasksService.updateTask(id, taskChanges);
-    }
-
-    this.cancelEdit();
-  }
-
-
   newTask(date: string): void {
     if (this.editingTaskId()) {
       return;
@@ -343,19 +255,10 @@ export class HomeComponent {
       tag: preselectedTag,
       tagId: preselectedTag?.id,
     };
-    this.draftTask.set(newTask);
-    this.startEdit(newTask);
+    this.selectedTask.set(newTask);
+    this.newTaskId.set(newId);
   }
 
-  protected cancelEdit(): void {
-    this.editingTaskId.set(null);
-    this.deadlinePickerTaskId.set(null);
-    this.draftTask.set(null);
-    this.editTitle.set('');
-    this.editDescription.set('');
-    this.editTagId.set(undefined);
-    this.editDeadline.set('');
-  }
 
   onTaskDrop(event: CdkDragDrop<string>): void {
     const task = event.item.data as TaskCard | undefined;
@@ -417,7 +320,6 @@ export class HomeComponent {
   }
 
   goToSettings(): void {
-    this.cancelEdit();
     this.router.navigate(['/settings']);
   }
 }

@@ -1,31 +1,14 @@
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-     (click)="close()">
-
-  <div
-    class="w-full max-w-lg rounded-2xl border border-border bg-surface shadow-xl p-6"
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" (click)="close()">
+  <div class="w-full max-w-lg rounded-2xl border border-border bg-surface shadow-xl p-6"
     (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between gap-4 border-b border-border mb-4">
 
-    <div class="flex items-start justify-between gap-4 mb-5">
-
-      <div class="min-w-0">
-        <h2 class="text-xl font-semibold text-text truncate">
-          {{ task.title }}
-        </h2>
-
-        @if (task.tag) {
-          <span
-            class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold text-on-primary"
-            [style.background]="task.tag.color">
-            {{ task.tag.name | uppercase }}
-          </span>
-        }
+      <div class="font-semibold text-xl">
+        {{ action | titlecase }} Task
       </div>
 
-      <button
-        type="button"
-        class="icon-button rounded-full p-2 hover:bg-surface-hover flex items-center justify-center"
-        (click)="close()"
-        title="Close">
+      <button type="button" class="icon-button rounded-full p-2 hover:bg-surface-hover flex items-center justify-center"
+        (click)="close()" title="Close">
 
         <span class="material-symbols-rounded">
           close
@@ -33,23 +16,44 @@
       </button>
     </div>
 
+    @if (action === 'view') {
+      <div class="min-w-0  flex flex-col gap-4">
 
-    <div class="space-y-4">
-
-      <div>
-        <p class="text-xs uppercase tracking-wider text-text-secondary">
-          Description
-        </p>
-
-        <p class="mt-1 whitespace-pre-wrap text-sm text-text">
-          {{ task.description || 'No description' }}
-        </p>
-      </div>
-
-
-      @if (task.deadline) {
         <div>
-          <p class="text-xs uppercase tracking-wider text-text-secondary">
+          <p class="input-label">
+            Title
+          </p>
+          <p class="text-lg font-semibold text-text truncate">
+            {{ task.title }}
+          </p>
+        </div>
+
+        @if (task.tag) {
+        <div>
+          <p class="input-label">
+            Tag
+          </p>
+          <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold text-on-primary"
+            [style.background]="task.tag.color">
+            {{ task.tag.name | uppercase }}
+          </span>
+        </div>
+        }
+
+        <div>
+          <p class="input-label">
+            Description
+          </p>
+
+          <p class="mt-1 whitespace-pre-wrap text-sm text-text">
+            {{ task.description || 'No description' }}
+          </p>
+        </div>
+
+
+        @if (task.deadline) {
+        <div>
+          <p class="input-label">
             Deadline
           </p>
 
@@ -59,24 +63,137 @@
               warning
             </span>
 
-            {{ task.deadline  }}
+            {{ task.deadline }}
 
           </div>
         </div>
-      }
+        }
 
 
-      <div>
-        <p class="text-xs uppercase tracking-wider text-text-secondary">
-          Status
-        </p>
+        <div>
+          <p class="input-label">
+            Status
+          </p>
 
-        <p class="mt-1 text-sm text-text">
-          {{ task.completed ? 'Completed' : 'Pending' }}
-        </p>
+          <p class="mt-1 text-sm font-bold" [class.text-success]="task.completed" [class.text-warning]="!task.completed">
+            {{ task.completed ? 'Completed' : 'Pending' }}
+          </p>
+        </div>
+
       </div>
+    } @else if (action=== 'edit' || action === 'create') {
+      <form #editForm (submit)="
+            saveForm(
+              $event,
+              task.date,
+              title.value,
+              description.value,
+              tagSelect.value,
+              deadlineDate.value
+            )
+          " class="flex flex-col gap-4 w-full">
 
-    </div>
+        <div>
+          <p class="input-label">
+            Title
+            <span class="text-danger font-semibold">*</span>
+          </p>
+            <input 
+              type="text" [id]="'task-title-' + task.id" 
+              #title 
+              placeholder="e.g. Bee Hunting"
+              class="input-text"
+              [style]="!editTitle() ? {'border-color': 'var(--color-danger)'} : {'border-color': 'var(--color-border)'}"
+              [value]="editTitle()" 
+              (input)="editTitle.set($any($event.target).value)"
+              required 
+              />
+          @if(!editTitle()){
+            <div class="text-danger text-sm font-semibold">
+              This field is required
+            </div>
+          }
+        </div>
+
+        <div>
+          <p class="input-label">
+            Description
+          </p>
+          <textarea type="text" 
+            #description 
+            placeholder="e.g. This task is about finding the bees that escaped..."
+            class="input-text max-h-40 min-h-25"
+            [value]="editDescription()" 
+            ></textarea>
+        </div>
+
+        <div>
+          <p class="input-label italic">
+            ~ Subtasks coming soon 💡 ~
+          </p>
+
+        </div>
+        
+        <div>
+          <p class="input-label">
+            Tag
+          </p>
+          <span class="flex gap-4 items-center">
+            <select #tagSelect name="tag" class="w-35 text-text bg-surface border border-border rounded-lg"
+              [ngModel]="editTagId()" (ngModelChange)="editTagId.set($event)">
+              <option [value]="undefined">
+                None
+              </option>
+
+              @for (tag of tags(); track tag.id) {
+              <option [value]="tag.id"
+                [style.background]="tag.id? tag.color : ''">
+                {{ tag.name | titlecase}}
+              </option>
+              }
+            </select>
+
+            <span class="text-xs font-bold text-on-primary px-1 py-1 rounded-full" 
+              [style.background]="selectedTag()?.color" style="font-size: 10px">
+            @if (selectedTag()?.icon){
+              <img
+                [src]="'app-icon://' + selectedTag()?.icon"
+                class="w-6 h-6 rounded object-cover inline-block"/>
+            } @else {
+              <div class="w-6 h-6 rounded"></div>
+            }
+            </span>
+        </span>
+        </div>
+
+        <div>
+          <p class="input-label">
+            Deadline
+          <div class="flex flex-col justify-center">
+            <input 
+              #deadlineDate 
+              type="date" 
+              [value]="editDeadline()"
+              (change)="setDeadline($event)"
+              class="rounded-lg border border-border bg-surface text-text p-2 text-sm shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)]"
+              />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+          <button type="submit"
+            class="w-20 icon-button rounded-full border border-success bg-success py-1 text-sm font-semibold text-on-success shadow-sm hover:bg-success-hover">
+            Save
+          </button>
+
+          <button type="button"
+            class="w-20 icon-button rounded-full border border-border bg-neutral py-1 text-sm font-semibold text-on-neutral shadow-sm hover:bg-neutral-hover"
+            (click)="cancelEdit()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    }
 
   </div>
 </div>
