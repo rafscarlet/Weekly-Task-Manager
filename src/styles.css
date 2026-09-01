@@ -160,6 +160,7 @@
 
   input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
+    outline: none;
   }
 
   .dark input[type="date"]::-webkit-calendar-picker-indicator {
@@ -208,7 +209,7 @@
 
   .input-text:focus {
     outline: none;
-    border: 2px solid var(--color-primary)
+    border: 2px solid var(--color-primary);
   }
 
   .round-checkbox {

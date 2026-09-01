@@ -103,7 +103,7 @@
               #title 
               placeholder="e.g. Bee Hunting"
               class="input-text"
-              [style]="!editTitle() ? {'border-color': 'var(--color-danger)'} : {'border-color': 'var(--color-border)'}"
+              [ngStyle]="!editTitle() ? {'border-color': 'var(--color-danger)'} : {}"
               [value]="editTitle()" 
               (input)="editTitle.set($any($event.target).value)"
               required 
@@ -141,7 +141,7 @@
           <span class="flex gap-4 items-center">
             <select #tagSelect name="tag" class="w-35 text-text bg-surface border border-border rounded-lg"
               [ngModel]="editTagId()" (ngModelChange)="editTagId.set($event)">
-              <option [value]="undefined">
+              <option [value]="'none'">
                 None
               </option>
 

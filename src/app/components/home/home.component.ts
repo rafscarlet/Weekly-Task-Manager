@@ -47,7 +47,6 @@ export class HomeComponent {
   protected readonly selectedWeekDate = signal(new Date())
   protected readonly deleteDropActive = signal(false);
 
-  protected readonly openTaskMenuId = signal<number | null>(null);
   protected readonly selectedTask = signal<TaskCard | null>(null);
 
   protected readonly tasks = this.tasksService.tasks;
@@ -67,7 +66,8 @@ export class HomeComponent {
 
   @HostListener('document:click')
   onDocumentClick() {
-    this.openTaskMenuId.set(null);
+    // this.editingTaskId.set(null);
+    // this.selectedTask.set(null);
   }
 
   constructor() {
@@ -121,7 +121,6 @@ export class HomeComponent {
 
   moveTaskToDate(task: TaskCard, targetDate: string): void {
     this.tasksService.updateTask(task.id, { date: targetDate });
-    this.openTaskMenuId.set(null);
   }
 
 
@@ -212,14 +211,12 @@ export class HomeComponent {
 
   viewTask(task: TaskCard): void {
     this.selectedTask.set(task);
-    this.openTaskMenuId.set(null);
   }
 
 
   editTask(task: TaskCard): void {
     this.selectedTask.set(task);
     this.editingTaskId.set(task.id);
-    this.openTaskMenuId.set(null);
   }
 
 
@@ -237,7 +234,6 @@ export class HomeComponent {
       return;
     }
     this.tasksService.deleteTask(task.id);
-    this.openTaskMenuId.set(null);
   }
 
   newTask(date: string): void {

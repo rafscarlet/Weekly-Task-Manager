@@ -14,6 +14,7 @@ export class DateService {
       date.getDate() === this.today.getDate()
     );
   }
+  
   getWeekDates(anchorDate = new Date()): Date[] {
     const date = new Date(anchorDate);
     const day = date.getDay(); // 0 (Sun) to 6 (Sat)
@@ -26,6 +27,5 @@ export class DateService {
       d.setDate(monday.getDate() + i);
       return d;
     });
-  
   }
 }

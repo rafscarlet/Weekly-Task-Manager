@@ -8,7 +8,7 @@ export type Settings = {
 export type TagCategory = {
   id: string;
   name: string;
-  color: string;
+  color?: string;
   icon?: string;
   preselected?: boolean;
 }

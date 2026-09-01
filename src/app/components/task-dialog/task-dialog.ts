@@ -49,7 +49,9 @@ export class TaskDialog {
   }
 
   ngAfterViewInit() {
-    this.titleInput.nativeElement.focus();
+    if (this.action === 'edit' || this.action === 'create'){
+      this.titleInput.nativeElement.focus();
+    }
   }
 
   saveForm(event: Event, date: string, title: string, description: string, tagId: string, deadline: string): void {
@@ -61,7 +63,7 @@ export class TaskDialog {
 
     const nextTitle = title.trim();
     const nextDescription = description.trim();
-    const nextTag =this.tags().find(tag => tag.id === tagId) ?? draftTask?.tag ?? undefined;
+    let  nextTag =this.tags().find(tag => tag.id === tagId) ?? undefined;
     const nextDeadline = deadline.trim() || undefined;
     const completed = this.tasks().find(task => task.id === this.task.id)?.completed || false;
 
@@ -74,12 +76,6 @@ export class TaskDialog {
       tagId: nextTag?.id ?? tagId,
       deadline: nextDeadline
     };
-
-    // console.log({
-    //   tagId,
-    //   nextTag,
-    //   taskChanges
-    // });
 
     if (isDraftTask && this.action === 'create') {
       this.tasksService.addTask({ ...draftTask, ...taskChanges });

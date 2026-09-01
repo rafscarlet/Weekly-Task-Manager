@@ -15,7 +15,7 @@
 
   @for (day of weekDays(); track $index; let last = $last) {
 
-  <div class="flex flex-col flex-1 min-h-0 h-full overflow-visible" 
+  <div class="flex flex-col flex-1 min-h-0 h-full overflow-visible min-w-0" 
        cdkDropList
        cdkDropListOrientation="vertical"
        [cdkDropListData]="(day | date: 'yyyy-MM-dd') ?? ''"
@@ -61,15 +61,16 @@
     </div>
 
 
-    <div class="flex-1 py-1 min-h-0 overflow-y-auto overflow-x-hidden">
-
+    <div class="flex-1 py-1 min-h-0 overflow-y-auto overflow-x-hidden"
+          title='Double Click to create a new task'
+          (dblclick)="newTask(getDateKey(day))" 
+          >
       @for (
         task of getTasksForDay((day | date: "yyyy-MM-dd") ?? "");
         track task.id
       ) {
 
       <div class="mx-3 cursor-pointer active:bg-gray-800 rounded-2xl"
-          [attr.id]="'task-' + task.id"
           cdkDrag
           [cdkDragData]="task"
           (dblclick)="editTask(task)"
@@ -124,6 +125,7 @@
   <div
     class="relative group w-full flex flex-row items-start gap-2 rounded-xl p-2 
     border-b border-border transition-all duration-150 max-h-25 rgb(var(--primary) / 0.3)"
+    title="Double Click to edit task"
     >
     <button 
       #optionsButton
@@ -143,10 +145,17 @@
     <input type="checkbox" [checked]="task.completed" (change)="toggleTaskCompleted(task)" class="round-checkbox my-1.5" />
 
     <span class="flex-1 min-w-0 overflow-hidden">
-      <span class="flex flex-nowrap items-center gap-2">
-        <h1 class="font-semibold text-text truncate"
-          [ngClass]="task.completed ? 'line-through text-text-secondary' : ''"
-          [attr.title]="task.title">
+      <span class="flex flex-nowrap items-center gap-2 min-w-0">
+        @if (task.deadline) {
+        <span class="flex items-center gap-1 text-danger whitespace-nowrap"
+          [attr.title]="'Deadline: ' + (task.deadline | date: 'dd/MM')">
+          <i class="material-symbols-rounded" [ngStyle]="{ 'font-size': '20px' }">
+            warning
+          </i>
+        </span>
+        }
+        <h1 class="min-w-0 flex-1 font-semibold text-text truncate"
+          [ngClass]="task.completed ? 'line-through text-text-secondary' : ''">
           {{ task.title }}
         </h1>
 
@@ -163,14 +172,7 @@
           }
           </span>
         }
-        @if (task.deadline) {
-        <span class="flex items-center gap-1 text-danger whitespace-nowrap"
-          [attr.title]="'Deadline: ' + (task.deadline | date: 'dd/MM')">
-          <i class="material-symbols-rounded" [ngStyle]="{ 'font-size': '20px' }">
-            warning
-          </i>
-        </span>
-        }
+
       </span>
 
       <p class="text-sm text-text-secondary line-clamp-2" [attr.title]="task.description">
