@@ -167,8 +167,8 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
     height: 1000,
-    minWidth: 1200,
-    minHeight: 800,
+    minWidth: 800,
+    minHeight: 700,
     show: false,
     icon: path.join(__dirname, "assets", "icon.ico"),
     webPreferences: {

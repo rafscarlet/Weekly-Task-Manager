@@ -3,6 +3,7 @@ import { Settings } from '../types/all-types';
 
 const DEFAULT_SETTINGS: Settings = {
   showCompleted: true,
+  showWeekends: false,
   showDeadlineOnCopy: false,
   darkMode: false
 };

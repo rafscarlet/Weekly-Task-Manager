@@ -135,8 +135,15 @@
     cursor: pointer;
   }
 
-  select {
-    padding: 0.25rem 0.1rem;
+ select {
+    padding: 0.4rem 0.5rem;
+    outline: none;
+  } 
+
+  a:hover {
+    color: rgb(var(--primary-hover));
+    cursor: pointer;
+    outline: none;
   }
 
   /* Scrollbar */
@@ -163,7 +170,7 @@
     outline: none;
   }
 
-  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+  .dark input[type="date"]::-webkit-calendar-picker-indicator, .dark input[type="time"]::-webkit-calendar-picker-indicator {
     filter: invert(1) brightness(1.5);
   }
 }
@@ -196,7 +203,7 @@
     text-transform: uppercase;
   }
 
-  .input-text {
+  .input-text{
     background-color: rgb(var(--surface));
     color: rgb(var(--text));
 
@@ -216,8 +223,8 @@
     appearance: none;
     -webkit-appearance: none;
 
-    width: 1.3rem;
-    height: 1.3rem;
+    width: 1.4rem;
+    height: 1.4rem;
 
     border-radius: 9999px;
     border: 2px solid rgb(var(--text-disabled));

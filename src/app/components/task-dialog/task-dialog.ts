@@ -19,12 +19,17 @@ export class TaskDialog {
   @ViewChild('title')
   titleInput!: ElementRef<HTMLInputElement>;
 
+  highlightTitle = signal(false);
+
   private tasksService: TasksService = inject(TasksService);
   private tagService: TagService = inject(TagService)
 
+  protected readonly today = new Date().toISOString().split('T')[0];
+
   protected readonly draftTask = signal<TaskCard | null>(null);
-  protected readonly editTitle = signal('');
-  protected readonly editDescription = signal('');
+  protected readonly editTitle = signal<string | undefined>(undefined);
+  protected readonly editTime = signal('');
+  protected readonly editDescription = signal<string | undefined>(undefined);
   protected readonly editTagId = signal<string | undefined>(undefined);
   protected readonly editDeadline = signal('');
   protected readonly selectedTag = signal<TagCategory | undefined>(undefined);
@@ -37,6 +42,7 @@ export class TaskDialog {
       if (this.action === 'edit' || this.action === 'create') {
         this.draftTask.set(this.task);
         this.editTitle.set(this.task.title);
+        this.editTime.set(this.task.time ?? '');
         this.editDescription.set(this.task.description);
         this.editTagId.set(this.task.tagId);
         this.editDeadline.set(this.task.deadline ?? '');
@@ -54,7 +60,11 @@ export class TaskDialog {
     }
   }
 
-  saveForm(event: Event, date: string, title: string, description: string, tagId: string, deadline: string): void {
+  isOverdue(task: TaskCard, date: string): boolean {
+    return task.deadline? date >= task.deadline && !task.completed && (task.completedAt? task.completedAt < task.deadline : false ): false;
+  }
+
+  saveForm(event: Event, date: string, title: string, description: string, tagId: string): void {
     event.preventDefault();
     event.stopPropagation();
 
@@ -62,14 +72,24 @@ export class TaskDialog {
     const isDraftTask = draftTask?.id === this.task.id;
 
     const nextTitle = title.trim();
+
+    if (!nextTitle) {
+      this.editTitle.set('');
+      this.titleInput.nativeElement.focus();
+      this.highlightTitle.set(true);
+      return;
+    }
+
+    const nextTime = this.editTime().trim() || undefined;
     const nextDescription = description.trim();
-    let  nextTag =this.tags().find(tag => tag.id === tagId) ?? undefined;
-    const nextDeadline = deadline.trim() || undefined;
+    const nextTag  =this.tags().find(tag => tag.id === tagId) ?? undefined;
+    const nextDeadline = this.editDeadline().trim() || undefined;
     const completed = this.tasks().find(task => task.id === this.task.id)?.completed || false;
 
     const taskChanges = {
       date,
       title: nextTitle || `Task #${this.task.id}`,
+      time: nextTime,
       description: nextDescription,
       completed,
       tag: nextTag,
@@ -89,6 +109,7 @@ export class TaskDialog {
   protected cancelEdit(): void {
     this.draftTask.set(null);
     this.editTitle.set('');
+    this.editTime.set('');
     this.editDescription.set('');
     this.editTagId.set(undefined);
     this.editDeadline.set('');
@@ -101,11 +122,29 @@ export class TaskDialog {
     this.editDeadline.set(input.value);
   }
 
+    protected setTime(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.editTime.set(input.value);
+  }
+
   protected toggleDeadlinePicker(event: Event, taskId: number): void {
     event.preventDefault();
     event.stopPropagation();
   }
 
+  hasUnsavedChanges(): boolean {
+    const draftTask = this.draftTask();
+    if (!draftTask) {
+      return false;
+    }
+    return (
+      draftTask.title !== this.editTitle() ||
+      draftTask.time !== this.editTime() ||
+      draftTask.description !== this.editDescription() ||
+      draftTask.tagId !== this.editTagId() ||
+      draftTask.deadline !== this.editDeadline()
+    );
+  }
 
   close() {
     this.closed.emit();

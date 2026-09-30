@@ -35,6 +35,13 @@
     color: rgb(var(--text));
 }
 
+.section-field label {
+    display: flex;
+    color: rgb(var(--text));
+    align-items: center;
+    gap: 1rem;
+}
+
 .submit-btn {
     background-color: rgb(var(--primary));
     color: rgb(var(--on-primary));

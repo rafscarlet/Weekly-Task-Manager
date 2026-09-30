@@ -97,7 +97,9 @@ export class TasksService {
       title: task.title,
       description: task.description,
       date: task.date,
+      time: task.time,
       completed: task.completed,
+      completedAt: task.completedAt,
       deadline: task.deadline,
       tagId: task.tag?.id.toString() ?? task.tagId
     };

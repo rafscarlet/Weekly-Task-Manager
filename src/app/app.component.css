@@ -26,7 +26,7 @@ header {
 footer {
     display: flex;
     align-items: center;
-    justify-content: end;
+    justify-content: space-between;
 
     background-color: rgb(var(--surface));
     color: rgb(var(--text-disabled));

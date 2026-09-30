@@ -1,6 +1,7 @@
 
 export type Settings = {
   showCompleted : boolean;
+  showWeekends: boolean;
   showDeadlineOnCopy: boolean;
   darkMode: boolean;
 }
@@ -16,9 +17,11 @@ export type TagCategory = {
 export interface Task {
   id: number;
   date: string;
+  time?: string;
   title: string;
   description: string;
   completed: boolean;
+  completedAt?: string;
   deadline?: string;
   tagId?: string;
 }

@@ -54,21 +54,15 @@ export class HomeComponent {
   protected readonly settings = this.settingsService.settings;
 
   protected readonly showCompleted = computed(() => this.settings().showCompleted);
+  protected readonly showWeekends = computed(() => this.settings().showWeekends);
   protected readonly showDeadlineOnCopy = computed(() => this.settings().showDeadlineOnCopy);
 
-  days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  protected readonly weekDays = computed(() => this.dateService.getWeekDates(this.selectedWeekDate())
-  );
+  protected readonly weekDays = computed(() => this.dateService.getWeekDates(this.selectedWeekDate(), this.showWeekends()));
   protected readonly visibleWeekContainsToday = computed(() =>
     this.weekDays().some(day => this.getDateKey(day) === this.today)
   );
-
-  @HostListener('document:click')
-  onDocumentClick() {
-    // this.editingTaskId.set(null);
-    // this.selectedTask.set(null);
-  }
 
   constructor() {
     effect(() => {
@@ -77,14 +71,23 @@ export class HomeComponent {
       // console.log('tasks:', this.tasks());
       // console.log('tags:', this.tags());
       // console.log('settings:', this.settings());
+      console.log(this.getTasksForDay(this.today));
     });
   }
 
   getTasksForDay(date: string): TaskCard[] {
-    const tasks = this.tasks().filter(task => task.date === date && (this.showCompleted() || !task.completed));
-    const draftTask = this.draftTask();
+    const tasks = this.tasks().filter(task => 
+      (this.showCompleted() || !task.completed) && 
+      task.deadline ? (
+        date >= task.date && 
+        (date >= this.today ? task.date >= date : date<=this.today) && 
+        (task.completedAt? date <= task.completedAt : true) )
+      : task.date === date );
+    return tasks;
+  }
 
-    return draftTask?.date === date ? [...tasks, draftTask] : tasks;
+  isOverdue(task: TaskCard, date: string): boolean {
+    return task.deadline? date >= task.deadline && !task.completed : false;
   }
 
   navigateWeek(direction: 'previous' | 'next'): void {
@@ -103,8 +106,10 @@ export class HomeComponent {
     return formatDate(date, 'yyyy-MM-dd', 'en-US');
   }
 
-  toggleTaskCompleted(task: TaskCard): void {
-    this.tasksService.updateTask(task.id, { completed: !task.completed });
+  toggleTaskCompleted(task: TaskCard, date: string): void {
+    const isCompleted = !task.completed;
+    const completedAt = isCompleted && task.deadline ? date : undefined;
+    this.tasksService.updateTask(task.id, { completed: isCompleted, completedAt });
   }
 
 

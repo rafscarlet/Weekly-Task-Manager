@@ -13,7 +13,11 @@
     <app-dialog></app-dialog>
 </div>
 
-<footer class="h-">
+<footer>
+    <span>
+        🐞 Found a bug or have a suggestion? 💬 Report it 
+        <a [title]="report_url()" [href]="report_url()">here</a>
+    </span>
     <span>
     ©Task Calendar • 
     <a [title]="releases_url" [href]="releases_url">{{appVersion()}}</a> 

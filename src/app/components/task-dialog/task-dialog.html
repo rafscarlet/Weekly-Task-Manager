@@ -88,18 +88,18 @@
               task.date,
               title.value,
               description.value,
-              tagSelect.value,
-              deadlineDate.value
-            )
-          " class="flex flex-col gap-4 w-full">
+              tagSelect.value
+            )" 
+            class="flex flex-col gap-4 w-full">
 
-        <div>
+      <div class="flex gap-2 ">
+        <div class="flex-1">
           <p class="input-label">
             Title
             <span class="text-danger font-semibold">*</span>
           </p>
             <input 
-              type="text" [id]="'task-title-' + task.id" 
+              type="text" id="task-title" 
               #title 
               placeholder="e.g. Bee Hunting"
               class="input-text"
@@ -108,11 +108,26 @@
               (input)="editTitle.set($any($event.target).value)"
               required 
               />
-          @if(!editTitle()){
+          @if(highlightTitle()){
             <div class="text-danger text-sm font-semibold">
               This field is required
             </div>
           }
+        </div>
+        
+        <div>
+          <p class="input-label">
+            Time
+          </p>
+          <input 
+            type="time" id="task-time" 
+            #time 
+            step="60"
+            class="input-text"
+            [value]="editTime()" 
+            (input)="setTime($event)"
+            />
+        </div>
         </div>
 
         <div>
@@ -175,9 +190,16 @@
               type="date" 
               [value]="editDeadline()"
               (change)="setDeadline($event)"
-              class="rounded-lg border border-border bg-surface text-text p-2 text-sm shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)]"
+              class="input-text rounded-lg border border-border bg-surface text-text p-2 text-sm"
+              [ngClass]="(editDeadline()? (editDeadline() < today && !task.completed) : false) ? 'border-danger':''"
               />
+
           </div>
+            @if (isOverdue(task, today)) {
+              <div class="text-danger uppercase font-bold text-center w-full mt-2 ">
+                task overdue!
+              </div>
+            }
         </div>
 
         <div class="flex items-center justify-end gap-2">
