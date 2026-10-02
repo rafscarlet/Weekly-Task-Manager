@@ -3,6 +3,7 @@ import { RouterModule } from '@angular/router';
 import { ToastComponent } from './components/toast/toast';
 import { ThemeService } from './services/theme.service';
 import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
+import { NotificationService } from './services/notification.service';
 
 
 const PROFILE_URL = "https://github.com/rafscarlet";
@@ -18,12 +19,16 @@ const REPORT_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdZYM7hM0WYVtQMUQ5e
 })
 export class AppComponent {
   private themeService = inject(ThemeService);
+  private notificationService = inject(NotificationService);
 
   readonly releases_url = RELEASES_URL;
   readonly profile_url = PROFILE_URL;
 
   readonly report_url = signal(REPORT_URL);
 
+  constructor() {
+    this.notificationService.start();
+  }
 
   appVersion = signal('');
   async ngOnInit() {

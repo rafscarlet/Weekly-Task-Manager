@@ -175,5 +175,5 @@
 @if (selectedTask()) {
 <app-task-dialog [task]="selectedTask()!"
   [action]="editingTaskId() === selectedTask()!.id ? 'edit' : newTaskId() === selectedTask()!.id ? 'create' :'view'"
-  (closed)="selectedTask.set(null);editingTaskId.set(null);draftTask.set(null);"></app-task-dialog>
+  (closed)="clearTaskEditorState()"></app-task-dialog>
 }

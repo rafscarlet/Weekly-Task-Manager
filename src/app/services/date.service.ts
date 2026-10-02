@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Reminder } from '../types/all-types';
 
 @Injectable({
   providedIn: 'root',
@@ -29,5 +30,29 @@ export class DateService {
       d.setDate(monday.getDate() + i);
       return d;
     });
+  }
+
+  calculateReminderTime(taskDate: string, reminder: Reminder): string {
+    const taskDateTime = new Date(taskDate);
+    let reminderTime: Date;
+
+    switch (reminder.unit) {
+      case 'min':
+        reminderTime = new Date(taskDateTime.getTime() - reminder.value * 60000);
+        break;
+      case 'h':
+        reminderTime = new Date(taskDateTime.getTime() - reminder.value * 3600000);
+        break;
+      case 'd':
+        reminderTime = new Date(taskDateTime.getTime() - reminder.value * 86400000);
+        break;
+      case 'w':
+        reminderTime = new Date(taskDateTime.getTime() - reminder.value * 604800000);
+        break;
+      default:
+        throw new Error('Invalid reminder unit');
+    }
+    return reminderTime.toISOString().split('T')[1]; // Returns in 'HH:mm' format
+
   }
 }

@@ -71,7 +71,6 @@ export class HomeComponent {
       // console.log('tasks:', this.tasks());
       // console.log('tags:', this.tags());
       // console.log('settings:', this.settings());
-      console.log(this.getTasksForDay(this.today));
     });
   }
 
@@ -80,7 +79,7 @@ export class HomeComponent {
       (this.showCompleted() || !task.completed) && 
       task.deadline ? (
         date >= task.date && 
-        (date >= this.today ? task.date >= date : date<=this.today) && 
+        (date > this.today ? task.date === date : true) && 
         (task.completedAt? date <= task.completedAt : true) )
       : task.date === date );
     return tasks;
@@ -178,7 +177,7 @@ export class HomeComponent {
     });
 
      component.instance.duplicate.subscribe(() => {
-      this.tasksService.addTask({ ...task, id: crypto.randomUUID().split('-').pop() as unknown as number });
+      this.tasksService.addTask({ ...task, id: this.tasksService.createTaskId() });
       this.closeMenu();
     });
 
@@ -218,6 +217,11 @@ export class HomeComponent {
     this.selectedTask.set(task);
   }
 
+  protected clearTaskEditorState(): void {
+    this.selectedTask.set(null);
+    this.editingTaskId.set(null);
+    this.newTaskId.set(null);
+  }
 
   editTask(task: TaskCard): void {
     this.selectedTask.set(task);
@@ -245,14 +249,14 @@ export class HomeComponent {
     if (this.editingTaskId()) {
       return;
     }
-    const newId = crypto.randomUUID().split('-').pop() as unknown as number;
+    const newId = this.tasksService.createTaskId();
     const preselectedTag = this.tags().find(tag => tag.preselected);
     const newTask: TaskCard = {
       id: newId,
       date: date,
       title: '',
       description: '',
-      completed: false, 
+      completed: false,
       tag: preselectedTag,
       tagId: preselectedTag?.id,
     };

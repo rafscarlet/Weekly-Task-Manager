@@ -9,13 +9,14 @@ Calendar Tasks is a simple productivity app designed to help you plan your week,
 - [x] Create, Edit, Complete, Move, Duplicate, Delete Tasks
 - [x] Task Tags with custom colors and icons
 - [x] Task Deadline with visual indicators 
-- [x] Drag & Drog functionality to move or delete 
+- [x] Drag & Drop functionality to move or delete 
 - [x] Copy Weekly Tasks to Clipboard
 - [x] Customizable Settings 
 - [x] Offline Storage (your data stays on your device)
 - [x] Light/Dark Mode
 - [x] Linux .AppImage file 
 - [x] Automatic Updates (windows)
+- [x] Bug/Suggestion Report form 
 
 ## Next Updates Feature Ideas (TODOs)
 

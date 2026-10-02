@@ -134,11 +134,23 @@
   button:hover {
     cursor: pointer;
   }
+  button:active {
+    transform: scale(0.96);
+    transition: transform 80ms ease;
+  }
 
  select {
-    padding: 0.4rem 0.5rem;
+    padding: 0.5rem;
     outline: none;
+    color: rgb(var(--text));
+    background-color: rgb(var(--surface));
+    border: 2px solid rgb(var(--border));
+    border-radius: 0.25rem;
   } 
+
+  select:focus {
+    border-color: rgb(var(--primary));
+  }
 
   a:hover {
     color: rgb(var(--primary-hover));
@@ -169,6 +181,7 @@
     cursor: pointer;
     outline: none;
   }
+
 
   .dark input[type="date"]::-webkit-calendar-picker-indicator, .dark input[type="time"]::-webkit-calendar-picker-indicator {
     filter: invert(1) brightness(1.5);
@@ -262,6 +275,11 @@
     transform: rotate(45deg) scale(1);
   }
 
+  .round-checkbox:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .round-checkbox:hover {
     cursor: pointer;
   }
@@ -285,5 +303,19 @@
     body.cdk-drag-dragging * {
       cursor: grabbing !important;
     }
+
+
+  /* Chrome, Safari, Edge */
+  .no-spinner::-webkit-inner-spin-button,
+  .no-spinner::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  .no-spinner {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 
 }

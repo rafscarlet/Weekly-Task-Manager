@@ -4,6 +4,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
   getVersion: () => ipcRenderer.invoke("app:getVersion")
 });
 
+contextBridge.exposeInMainWorld('electronNotificationAPI', {
+  showNotification: (title, body) =>
+    ipcRenderer.invoke('show-notification', title, body)
+});
+
 contextBridge.exposeInMainWorld("electronTasks", {
   loadTasks: () => ipcRenderer.invoke("tasks:load"),
   saveTasks: (tasks) => ipcRenderer.send("tasks:save", tasks)
@@ -22,3 +27,4 @@ contextBridge.exposeInMainWorld("electronSettings", {
   loadSettings: () => ipcRenderer.invoke("settings:load"),
   saveSettings: (settings) => ipcRenderer.send("settings:save", settings)
 });
+

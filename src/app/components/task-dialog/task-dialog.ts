@@ -1,10 +1,11 @@
-import { Component, Input, Output, EventEmitter, inject, signal, effect, ViewChild, ElementRef} from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, effect, ViewChild, ElementRef, computed} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TagCategory, TaskCard } from '../../types/all-types';
+import { Reminder, TaskCard, Unit } from '../../types/all-types';
 import { TasksService } from '../../services/tasks.service';
 import { TagService } from '../../services/tag.service';
 import { FormsModule } from '@angular/forms';
-
+import { ToastService } from '../../services/toast.service';
+import { DEFAULT_REMINDER, UNIT_LABELS } from '../../services/notification.service';
 
 @Component({
   selector: 'app-task-dialog',
@@ -20,111 +21,198 @@ export class TaskDialog {
   titleInput!: ElementRef<HTMLInputElement>;
 
   highlightTitle = signal(false);
+  unitLabels = UNIT_LABELS;
 
   private tasksService: TasksService = inject(TasksService);
-  private tagService: TagService = inject(TagService)
+  private tagService: TagService = inject(TagService);
+  private toastService: ToastService = inject(ToastService);
 
   protected readonly today = new Date().toISOString().split('T')[0];
 
-  protected readonly draftTask = signal<TaskCard | null>(null);
-  protected readonly editTitle = signal<string | undefined>(undefined);
-  protected readonly editTime = signal('');
-  protected readonly editDescription = signal<string | undefined>(undefined);
-  protected readonly editTagId = signal<string | undefined>(undefined);
-  protected readonly editDeadline = signal('');
-  protected readonly selectedTag = signal<TagCategory | undefined>(undefined);
+  protected originalTask : TaskCard | null = null; 
+  protected editableTask = signal<TaskCard | null>(null);
 
   protected readonly tasks = this.tasksService.tasks;
   protected readonly tags = this.tagService.tags;
 
-  constructor() {
-    effect(() => {
-      if (this.action === 'edit' || this.action === 'create') {
-        this.draftTask.set(this.task);
-        this.editTitle.set(this.task.title);
-        this.editTime.set(this.task.time ?? '');
-        this.editDescription.set(this.task.description);
-        this.editTagId.set(this.task.tagId);
-        this.editDeadline.set(this.task.deadline ?? '');
-      }
-    });
+  selectedTag = computed(() => this.tags().find(tag => tag.id === this.editableTask()?.tagId));
 
-    effect(() => {
-        this.selectedTag.set(this.tags().find(tag => tag.id === this.editTagId()));
-    })
+  ngOnChanges(): void {
+    this.highlightTitle.set(false);
+
+    if (this.action === 'edit' || this.action === 'create') {
+      this.originalTask = structuredClone(this.task);
+      this.editableTask.set(structuredClone(this.task));
+      return;
+    }
+
+    this.originalTask = null;
+    this.editableTask.set(null);
   }
 
   ngAfterViewInit() {
-    if (this.action === 'edit' || this.action === 'create'){
+    if ((this.action === 'edit' || this.action === 'create') && this.titleInput) {
       this.titleInput.nativeElement.focus();
     }
   }
 
-  isOverdue(task: TaskCard, date: string): boolean {
-    return task.deadline? date >= task.deadline && !task.completed && (task.completedAt? task.completedAt < task.deadline : false ): false;
+  isOverdue(task: TaskCard | null, date: string): boolean {
+    if (!task) {
+      return false;
+    }
+    return task.deadline? 
+      date >= task.deadline && 
+      !task.completed && 
+      (task.completedAt? task.completedAt < task.deadline : false )
+    : false;
   }
 
-  saveForm(event: Event, date: string, title: string, description: string, tagId: string): void {
+  addReminder(): void {
+    const editable = this.editableTask();
+    if (!editable) {
+      return;
+    }
+    const newId = (editable.reminderTimes?.reduce((max, reminder) => Math.max(max, reminder.id), -1) ?? -1) + 1 ; 
+    const reminder: Reminder = { 
+      id: newId, 
+      value: DEFAULT_REMINDER.value, 
+      unit: DEFAULT_REMINDER.unit };
+    this.updateTaskField('reminderTimes', [...(editable.reminderTimes || []), reminder]);
+  }
+
+  updateReminderUnit(id: number, event:Event): void {
+    const unit = (event.target as HTMLInputElement).value as Unit;
+    const editable = this.editableTask();
+
+    if(!editable){
+      return; 
+    }
+
+    const reminderTimes: Reminder[] = editable.reminderTimes?.map(reminder => 
+      reminder.id === id? { ...reminder, unit } : reminder)?? [];
+      this.updateTaskField('reminderTimes', reminderTimes);
+  }
+
+  updateReminderValue(id: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = Number(input.value);
+
+    if (Number.isNaN(value)) {
+      return;
+    }
+
+    const editable = this.editableTask();
+
+    if (!editable) {
+      return;
+    }
+
+    const reminderTimes: Reminder[] =
+      editable.reminderTimes?.map(reminder =>
+        reminder.id === id
+          ? { ...reminder, value }
+          : reminder
+      ) ?? [];
+
+    this.updateTaskField('reminderTimes', reminderTimes);
+  }
+
+  removeReminder(reminderId: number): void {
+    const editable = this.editableTask();
+    if (!editable || !editable.reminderTimes) {
+      return;
+    }
+    const updatedReminders = editable.reminderTimes.filter(reminder => reminder.id !== reminderId);
+    this.updateTaskField('reminderTimes', updatedReminders);
+  }
+
+  protected updateTaskField<K extends keyof TaskCard>(field: K, value: TaskCard[K]): void {
+    this.editableTask.update( task => 
+      task ? {
+        ...task, 
+        [field]: value
+      }: null
+    );
+  }
+
+  saveForm(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
 
-    const draftTask = this.draftTask();
-    const isDraftTask = draftTask?.id === this.task.id;
+    const editable = this.editableTask();
 
-    const nextTitle = title.trim();
+    if (!editable){
+      return; 
+    }
 
-    if (!nextTitle) {
-      this.editTitle.set('');
+    const title = editable.title.trim();
+
+    if (!title) {
       this.titleInput.nativeElement.focus();
       this.highlightTitle.set(true);
       return;
     }
 
-    const nextTime = this.editTime().trim() || undefined;
-    const nextDescription = description.trim();
-    const nextTag  =this.tags().find(tag => tag.id === tagId) ?? undefined;
-    const nextDeadline = this.editDeadline().trim() || undefined;
-    const completed = this.tasks().find(task => task.id === this.task.id)?.completed || false;
+    const reminders = editable.reminderTimes ?? [];
+    const distinctReminders = Array.from(
+      new Map(
+        reminders.map(reminder => [
+          `${reminder.value}-${reminder.unit}`,
+          reminder
+        ])
+      ).values()
+    );
 
-    const taskChanges = {
-      date,
-      title: nextTitle || `Task #${this.task.id}`,
-      time: nextTime,
-      description: nextDescription,
-      completed,
-      tag: nextTag,
-      tagId: nextTag?.id ?? tagId,
-      deadline: nextDeadline
-    };
-
-    if (isDraftTask && this.action === 'create') {
-      this.tasksService.addTask({ ...draftTask, ...taskChanges });
-    } else {
-      this.tasksService.updateTask(this.task.id, taskChanges);
+    const taskToSave = {
+      ...editable, 
+      title, 
+      description: editable.description.trim(),
+      reminderTimes: distinctReminders
     }
 
-    this.cancelEdit();
+    if (this.action === 'create') {
+      this.tasksService.addTask({ ...taskToSave });
+    } else {
+      this.tasksService.updateTask(this.task.id, taskToSave);
+    }
+
+    this.clearEdit();
   }
 
-  protected cancelEdit(): void {
-    this.draftTask.set(null);
-    this.editTitle.set('');
-    this.editTime.set('');
-    this.editDescription.set('');
-    this.editTagId.set(undefined);
-    this.editDeadline.set('');
-    
-    this.close();
+  protected clearEdit(): void {
+    this.resetEditorState();
+    this.closed.emit();
+  }
+
+  private resetEditorState(): void {
+    this.originalTask = null;
+    this.editableTask.set(null);
+    this.highlightTitle.set(false);
   }
 
   protected setDeadline(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.editDeadline.set(input.value);
+    this.editableTask.update(task => task? {...task ,deadline: input.value || undefined }: null);
+  }
+
+  clearTime(): void {
+    this.editableTask.update(task => task? {...task ,time: undefined }: null);
   }
 
     protected setTime(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this.editTime.set(input.value);
+    this.editableTask.update(task => task? {...task ,time: input.value || undefined } : null);
+  }
+
+  protected updateTag(tagId: string | null | undefined): void {
+    const selectedTagId = tagId && tagId !== 'none' ? tagId : undefined;
+    this.editableTask.update(task => task ? {
+      ...task,
+      tagId: selectedTagId,
+      tag: selectedTagId
+        ? this.tags().find(tag => tag.id === selectedTagId) ?? undefined
+        : undefined
+    } : null);
   }
 
   protected toggleDeadlinePicker(event: Event, taskId: number): void {
@@ -133,20 +221,32 @@ export class TaskDialog {
   }
 
   hasUnsavedChanges(): boolean {
-    const draftTask = this.draftTask();
-    if (!draftTask) {
+    const editable = this.editableTask();
+    const original = this.originalTask;
+
+    if (!editable || !original) {
       return false;
     }
+
     return (
-      draftTask.title !== this.editTitle() ||
-      draftTask.time !== this.editTime() ||
-      draftTask.description !== this.editDescription() ||
-      draftTask.tagId !== this.editTagId() ||
-      draftTask.deadline !== this.editDeadline()
+      editable.title !== original.title ||
+      editable.description !== original.description ||
+      editable.date !== original.date ||
+      editable.time !== original.time ||
+      editable.deadline !== original.deadline ||
+      editable.tagId !== original.tagId ||
+      editable.completed !== original.completed ||
+      editable.completedAt !== original.completedAt ||
+      editable.reminderEnabled !== original.reminderEnabled ||
+      JSON.stringify(editable.reminderTimes) !== JSON.stringify(original.reminderTimes)
     );
   }
 
-  close() {
+  close(): void {
+    if (!this.hasUnsavedChanges()) {
+      this.toastService.showError('Careful! You have unsaved changes.');
+      return;
+    }
     this.closed.emit();
   }
 }

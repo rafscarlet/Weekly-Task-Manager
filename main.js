@@ -6,10 +6,9 @@ process.on("unhandledRejection", (error) => {
   console.error("Unhandled rejection:", error);
 });
 
-const { app, BrowserWindow, ipcMain, dialog, shell, protocol} = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell, protocol, Notification} = require("electron");
 const { autoUpdater } = require("electron-updater");
 const crypto = require("crypto");
-
 
 const fs = require("fs");
 const path = require("path");
@@ -32,14 +31,26 @@ function getTasksFilePath() {
 }
 
 function readTasks() {
-  const userDataFilePath = getTasksFilePath();
+  const filePath = getTasksFilePath();
 
-  if (fs.existsSync(userDataFilePath)) {
-    const payload = JSON.parse(fs.readFileSync(userDataFilePath, "utf8"));
-    return Array.isArray(payload) ? payload : payload.tasks ?? [];
-  }
+  if (!fs.existsSync(filePath)) {
     return [];
   }
+
+  try {
+    const payload = JSON.parse(
+      fs.readFileSync(filePath, "utf8")
+    );
+
+    return Array.isArray(payload)
+      ? payload
+      : payload.tasks ?? [];
+
+  } catch (error) {
+    console.error("Failed to read tasks.json:", error);
+    return [];
+  }
+}
 
 function saveTasks(tasks = tasksCache) {
   tasksCache = tasks;
@@ -55,6 +66,13 @@ ipcMain.handle("tasks:load", () => {
   return tasksCache;
 });
 
+ipcMain.handle('show-notification', (_, title, body) => {
+  new Notification({
+    title,
+    body
+  }).show();
+});
+
 ipcMain.on("tasks:save", (_event, tasks) => {
   saveTasks(Array.isArray(tasks) ? tasks : []);
 });
@@ -66,13 +84,22 @@ function getTagsFilePath() {
 }
 
 function readTags() {
-  const userDataFilePath = getTagsFilePath();
+  const filePath = getTagsFilePath();
 
-  if (fs.existsSync(userDataFilePath)) {
-    const payload = JSON.parse(fs.readFileSync(userDataFilePath, "utf8"));
-    return Array.isArray(payload) ? payload : payload.tags ?? [];
-  }
+  if (!fs.existsSync(filePath)) {
     return [];
+  }
+  try {
+    const payload = JSON.parse(
+      fs.readFileSync(filePath, "utf8")
+    );
+    return Array.isArray(payload)
+      ? payload
+      : payload.tags ?? [];
+  } catch (error) {
+    console.error("Failed to read tags.json:", error);
+    return [];
+  }
   }
 
 function saveTags(tags = tagsCache) {
@@ -137,14 +164,26 @@ function getSettingsFilePath() {
 }
 
 function readSettings() {
-  const userDataFilePath = getSettingsFilePath();
+  const filePath = getSettingsFilePath();
 
-  if (fs.existsSync(userDataFilePath)) {
-    const payload = JSON.parse(fs.readFileSync(userDataFilePath, "utf8"));
-    return typeof payload === "object" && payload !== null ? payload : {};
-  }
+  if (!fs.existsSync(filePath)) {
     return {};
   }
+
+  try {
+    const payload = JSON.parse(
+      fs.readFileSync(filePath, "utf8")
+    );
+
+    return typeof payload === "object" && payload !== null
+      ? payload
+      : {};
+
+  } catch (error) {
+    console.error("Failed to read settings.json:", error);
+    return {};
+  }
+}
 
 function saveSettings(settings = settingsCache) {
   settingsCache = settings;
@@ -252,17 +291,7 @@ function setupAutoUpdater() {
 
 ////////////// APP //////////////
 
-app.on("before-quit", () => {
-  saveTasks()
-  saveTags();
-  saveSettings();
-});
-
 app.on("window-all-closed", () => {
-  saveTasks();
-  saveTags();
-  saveSettings();
-
   if (process.platform !== "darwin") {
     app.quit();
   }
