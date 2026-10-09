@@ -24,8 +24,6 @@ export class TasksService {
   private tagService = inject(TagService);
   private dateService = inject(DateService);
   private readonly _tasks = signal<TaskCard[]>([]);
-  private readonly _tags = signal<TagCategory[]>([]);
-  private nextTaskId = 1;
 
   constructor() {
     effect(() => {
@@ -51,15 +49,25 @@ export class TasksService {
       const electronTasks = await window.electronTasks?.loadTasks();
 
       if (electronTasks) {
-        this._tasks.set(this.normalizeTasks(electronTasks).map(task => ({
-          ...task,
-          tag: this.tagService.tags().find(tag => tag.id === task.tagId) ?? undefined,
-          formattedReminders: task.reminderTimes?.map(reminder => this.dateService.calculateReminderTime(task.date, reminder) ) ?? []
-        })));
+        this._tasks.set(
+          this.normalizeTasks(electronTasks).map(task =>
+            this.enrichTask(task)
+          )
+        );
       }
     } catch (error) {
       throw error;
     }
+  }
+
+  private enrichTask(task: TaskCard): TaskCard {
+    return {
+      ...task,
+      tag: this.tagService.tags().find(tag => tag.id === task.tagId),
+      formattedReminders: task.reminderTimes?.map(reminder =>
+        this.dateService.calculateReminderTime(task.date, task.time, reminder)
+      ) ?? []
+    };
   }
 
   private normalizeTasks(tasks: Task[]): Task[] {
@@ -97,17 +105,21 @@ export class TasksService {
   addTask(task: TaskCard): void {
     this.updateTasks(tasks => [
       ...tasks,
-      task
+      this.enrichTask(task)
     ]);
+
     this.toastService.showSuccess('Task created!');
   }
 
   updateTask(id: number, changes: Partial<Omit<TaskCard, 'id'>>): void {
     this.updateTasks(tasks =>
       tasks.map(task =>
-        task.id === id ? { ...task, ...changes } : task
+        task.id === id
+          ? this.enrichTask({ ...task, ...changes })
+          : task
       )
     );
+
     this.toastService.showSuccess('Task updated!');
   }
 

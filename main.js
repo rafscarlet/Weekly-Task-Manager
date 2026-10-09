@@ -6,12 +6,28 @@ process.on("unhandledRejection", (error) => {
   console.error("Unhandled rejection:", error);
 });
 
-const { app, BrowserWindow, ipcMain, dialog, shell, protocol, Notification} = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  shell,
+  protocol,
+  Notification,
+  Tray,
+  Menu,
+  nativeImage,
+} = require("electron");
 const { autoUpdater } = require("electron-updater");
 const crypto = require("crypto");
+const sharp = require("sharp");
 
 const fs = require("fs");
 const path = require("path");
+
+let mainWindow = null;
+let isQuitting = false;
+let tray = null;
 
 let tasksCache = [];
 let tagsCache = [];
@@ -25,7 +41,7 @@ function ensureUserDataFolder() {
   }
 }
 
-// Tasks 
+// Tasks
 function getTasksFilePath() {
   return path.join(app.getPath("userData"), "tasks.json");
 }
@@ -38,14 +54,9 @@ function readTasks() {
   }
 
   try {
-    const payload = JSON.parse(
-      fs.readFileSync(filePath, "utf8")
-    );
+    const payload = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-    return Array.isArray(payload)
-      ? payload
-      : payload.tasks ?? [];
-
+    return Array.isArray(payload) ? payload : (payload.tasks ?? []);
   } catch (error) {
     console.error("Failed to read tasks.json:", error);
     return [];
@@ -54,7 +65,10 @@ function readTasks() {
 
 function saveTasks(tasks = tasksCache) {
   tasksCache = tasks;
-  fs.writeFileSync(getTasksFilePath(), JSON.stringify({ tasks: tasksCache }, null, 2));
+  fs.writeFileSync(
+    getTasksFilePath(),
+    JSON.stringify({ tasks: tasksCache }, null, 2),
+  );
 }
 
 ipcMain.handle("app:getVersion", () => {
@@ -66,17 +80,60 @@ ipcMain.handle("tasks:load", () => {
   return tasksCache;
 });
 
-ipcMain.handle('show-notification', (_, title, body) => {
+// Notifications
+
+ipcMain.handle("show-notification", (_, title, body) => {
   new Notification({
     title,
-    body
+    body,
   }).show();
+});
+
+// Notification Badge
+async function createBadgeIcon() {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+      width="32" height="32" viewBox="0 0 32 32">
+      <circle cx="15" cy="18" r="10" fill="#e53935"/>
+    </svg>
+  `;
+
+  const pngBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
+
+  return nativeImage.createFromBuffer(pngBuffer);
+}
+
+ipcMain.handle("set-unread-badge", async (_, count) => {
+  const badgeCount = Number.isFinite(count) ? Math.max(0, count) : 0;
+
+  if (mainWindow && process.platform === "win32") {
+    if (badgeCount > 0) {
+      const badgeIcon = await createBadgeIcon();
+
+      mainWindow.setOverlayIcon(badgeIcon, `${badgeCount} unread reminders`);
+    } else {
+      mainWindow.setOverlayIcon(null, "");
+    }
+  }
+
+  if (process.platform === "darwin" || process.platform === "linux") {
+    app.setBadgeCount(badgeCount);
+  }
+
+  if (tray) {
+    tray.setToolTip(
+      badgeCount > 0
+        ? `Calendar Tasks App - ${badgeCount} pending tasks`
+        : "Calendar Tasks App",
+    );
+  }
+
+  return true;
 });
 
 ipcMain.on("tasks:save", (_event, tasks) => {
   saveTasks(Array.isArray(tasks) ? tasks : []);
 });
-
 
 // Tags
 function getTagsFilePath() {
@@ -90,21 +147,20 @@ function readTags() {
     return [];
   }
   try {
-    const payload = JSON.parse(
-      fs.readFileSync(filePath, "utf8")
-    );
-    return Array.isArray(payload)
-      ? payload
-      : payload.tags ?? [];
+    const payload = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    return Array.isArray(payload) ? payload : (payload.tags ?? []);
   } catch (error) {
     console.error("Failed to read tags.json:", error);
     return [];
   }
-  }
+}
 
 function saveTags(tags = tagsCache) {
   tagsCache = tags;
-  fs.writeFileSync(getTagsFilePath(), JSON.stringify({ tags: tagsCache }, null, 2));
+  fs.writeFileSync(
+    getTagsFilePath(),
+    JSON.stringify({ tags: tagsCache }, null, 2),
+  );
 }
 
 ipcMain.handle("tags:load", () => {
@@ -128,9 +184,9 @@ ipcMain.handle("select-image", async () => {
     filters: [
       {
         name: "Images",
-        extensions: ["png", "jpg", "jpeg", "svg"]
-      }
-    ]
+        extensions: ["png", "jpg", "jpeg", "svg"],
+      },
+    ],
   });
 
   if (result.canceled) {
@@ -148,10 +204,7 @@ ipcMain.handle("select-image", async () => {
   const extension = path.extname(sourcePath);
   const filename = `${crypto.randomUUID()}${extension}`;
 
-  const destinationPath = path.join(
-    iconsFolder,
-    filename
-  );
+  const destinationPath = path.join(iconsFolder, filename);
 
   fs.copyFileSync(sourcePath, destinationPath);
 
@@ -171,14 +224,9 @@ function readSettings() {
   }
 
   try {
-    const payload = JSON.parse(
-      fs.readFileSync(filePath, "utf8")
-    );
+    const payload = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-    return typeof payload === "object" && payload !== null
-      ? payload
-      : {};
-
+    return typeof payload === "object" && payload !== null ? payload : {};
   } catch (error) {
     console.error("Failed to read settings.json:", error);
     return {};
@@ -187,7 +235,10 @@ function readSettings() {
 
 function saveSettings(settings = settingsCache) {
   settingsCache = settings;
-  fs.writeFileSync(getSettingsFilePath(), JSON.stringify(settingsCache, null, 2));
+  fs.writeFileSync(
+    getSettingsFilePath(),
+    JSON.stringify(settingsCache, null, 2),
+  );
 }
 
 ipcMain.handle("settings:load", () => {
@@ -196,11 +247,12 @@ ipcMain.handle("settings:load", () => {
 });
 
 ipcMain.on("settings:save", (_event, settings) => {
-  saveSettings(typeof settings === "object" && settings !== null ? settings : {});
+  saveSettings(
+    typeof settings === "object" && settings !== null ? settings : {},
+  );
 });
 
-
-// window 
+// window
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -213,13 +265,22 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
-      nodeIntegration: false
-    }
+      nodeIntegration: false,
+    },
   });
+
+  mainWindow = win;
 
   win.once("ready-to-show", () => {
     win.maximize();
     win.show();
+  });
+
+  win.on("close", (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      win.hide();
+    }
   });
 
   win.webContents.on("will-navigate", (event, url) => {
@@ -239,18 +300,21 @@ function createWindow() {
   const candidatePaths = [
     path.join(__dirname, "dist", "calendar-tasks", "browser", "index.html"),
     path.join(__dirname, "dist", "calendar-tasks", "index.html"),
-    path.join(__dirname, "index.html")
+    path.join(__dirname, "index.html"),
   ];
-  const appPath = candidatePaths.find((candidatePath) => fs.existsSync(candidatePath));
+  const appPath = candidatePaths.find((candidatePath) =>
+    fs.existsSync(candidatePath),
+  );
 
   if (appPath) {
     win.loadFile(appPath);
     return;
   }
 
-  win.loadURL("data:text/html,<h1>Angular build not found</h1><p>Run npm run build or npm run dev.</p>");
+  win.loadURL(
+    "data:text/html,<h1>Angular build not found</h1><p>Run npm run build or npm run dev.</p>",
+  );
 }
-
 
 function setupAutoUpdater() {
   if (!app.isPackaged) {
@@ -270,14 +334,16 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on("update-downloaded", () => {
-      console.log("UPDATE DOWNLOADED EVENT FIRED");
+    console.log("UPDATE DOWNLOADED EVENT FIRED");
 
-      dialog.showMessageBox({
+    dialog
+      .showMessageBox({
         type: "info",
         title: "Update ready",
         message: "A new version has been downloaded.",
-        detail: "The application will restart to install the update."
-      }).then(() => {
+        detail: "The application will restart to install the update.",
+      })
+      .then(() => {
         autoUpdater.quitAndInstall();
       });
   });
@@ -289,13 +355,47 @@ function setupAutoUpdater() {
   autoUpdater.checkForUpdates();
 }
 
-////////////// APP //////////////
+//// Tray ////
 
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
-});
+function createTray() {
+  const iconPath = path.join(__dirname, "assets", "icon.ico");
+  tray = new Tray(iconPath);
+
+  tray.setToolTip("Calendar Tasks App");
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "Open",
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      },
+    },
+    // {
+    //   type: "separator"
+    // },
+    {
+      label: "Quit",
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      },
+    },
+  ]);
+
+  tray.setContextMenu(contextMenu);
+
+  tray.on("double-click", () => {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
+////////////// APP //////////////
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -303,31 +403,24 @@ protocol.registerSchemesAsPrivileged([
     privileges: {
       secure: true,
       supportFetchAPI: true,
-      bypassCSP: true
-    }
-  }
+      bypassCSP: true,
+    },
+  },
 ]);
 
 app.whenReady().then(() => {
   ensureUserDataFolder();
 
-  protocol.handle("app-icon", request => {
-    const filename = decodeURIComponent(
-      request.url.replace("app-icon://", "")
-    );
+  protocol.handle("app-icon", (request) => {
+    const filename = decodeURIComponent(request.url.replace("app-icon://", ""));
 
-    const iconPath = path.join(
-      app.getPath("userData"),
-      "icons",
-      filename
-    );
+    const iconPath = path.join(app.getPath("userData"), "icons", filename);
 
-    return require("electron").net.fetch(
-      `file://${iconPath}`
-    );
+    return require("electron").net.fetch(`file://${iconPath}`);
   });
 
   createWindow();
+  createTray();
 
   setupAutoUpdater();
 });

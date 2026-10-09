@@ -1,5 +1,5 @@
 import { CommonModule, formatDate } from '@angular/common';
-import { Component, computed, effect, HostListener, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { DateService } from '../../services/date.service';
 import { TasksService } from '../../services/tasks.service';
@@ -34,19 +34,14 @@ export class HomeComponent {
   private overlay = inject(Overlay);
   private overlayRef?: OverlayRef;
 
-  protected readonly today = new Date().toISOString().split('T')[0];
-  protected readonly loadError = signal<string | null>(null);
+  protected readonly today = this.dateService.today;
+  protected readonly currentDate = this.dateService.currentDate;
+
   protected readonly editingTaskId = signal<number | null>(null);
   protected readonly newTaskId = signal<number | null>(null);
-
-  protected readonly draftTask = signal<TaskCard | null>(null);
-  protected readonly editTitle = signal('');
-  protected readonly editDescription = signal('');
-  protected readonly editTagId = signal<string | undefined>(undefined);
-  protected readonly editDeadline = signal('');
-  protected readonly selectedWeekDate = signal(new Date())
   protected readonly deleteDropActive = signal(false);
-
+  
+  protected readonly selectedWeekDate = signal(new Date())
   protected readonly selectedTask = signal<TaskCard | null>(null);
 
   protected readonly tasks = this.tasksService.tasks;
@@ -61,10 +56,10 @@ export class HomeComponent {
 
   protected readonly weekDays = computed(() => this.dateService.getWeekDates(this.selectedWeekDate(), this.showWeekends()));
   protected readonly visibleWeekContainsToday = computed(() =>
-    this.weekDays().some(day => this.getDateKey(day) === this.today)
+    this.weekDays().some(day => this.getDateKey(day) === this.currentDate())
   );
 
-  constructor() {
+  constructor() { 
     effect(() => {
       this.tasks();
       // console.log('Today is:', this.today);
@@ -74,12 +69,13 @@ export class HomeComponent {
     });
   }
 
+
   getTasksForDay(date: string): TaskCard[] {
     const tasks = this.tasks().filter(task => 
       (this.showCompleted() || !task.completed) && 
       task.deadline ? (
         date >= task.date && 
-        (date > this.today ? task.date === date : true) && 
+        (date > this.currentDate() ? task.date === date : true) && 
         (task.completedAt? date <= task.completedAt : true) )
       : task.date === date );
     return tasks;
@@ -134,7 +130,6 @@ export class HomeComponent {
     this.closeMenu();
 
     const button = event.currentTarget as HTMLElement;
-    const position = button.getBoundingClientRect();
 
     this.overlayRef = this.overlay.create({
       positionStrategy: this.overlay

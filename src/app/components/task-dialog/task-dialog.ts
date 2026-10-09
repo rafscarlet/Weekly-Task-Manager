@@ -6,6 +6,7 @@ import { TagService } from '../../services/tag.service';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../services/toast.service';
 import { DEFAULT_REMINDER, UNIT_LABELS } from '../../services/notification.service';
+import { DateService } from '../../services/date.service';
 
 @Component({
   selector: 'app-task-dialog',
@@ -26,8 +27,9 @@ export class TaskDialog {
   private tasksService: TasksService = inject(TasksService);
   private tagService: TagService = inject(TagService);
   private toastService: ToastService = inject(ToastService);
+  private dateService: DateService = inject(DateService);
 
-  protected readonly today = new Date().toISOString().split('T')[0];
+  protected readonly today = this.dateService.currentDate;
 
   protected originalTask : TaskCard | null = null; 
   protected editableTask = signal<TaskCard | null>(null);
@@ -60,10 +62,8 @@ export class TaskDialog {
     if (!task) {
       return false;
     }
-    return task.deadline? 
-      date >= task.deadline && 
-      !task.completed && 
-      (task.completedAt? task.completedAt < task.deadline : false )
+    return task.deadline && !task.completed? 
+      date >= task.deadline 
     : false;
   }
 
@@ -80,8 +80,7 @@ export class TaskDialog {
     this.updateTaskField('reminderTimes', [...(editable.reminderTimes || []), reminder]);
   }
 
-  updateReminderUnit(id: number, event:Event): void {
-    const unit = (event.target as HTMLInputElement).value as Unit;
+  updateReminderUnit(id: number, unit:Unit): void {
     const editable = this.editableTask();
 
     if(!editable){
@@ -93,10 +92,7 @@ export class TaskDialog {
       this.updateTaskField('reminderTimes', reminderTimes);
   }
 
-  updateReminderValue(id: number, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const value = Number(input.value);
-
+  updateReminderValue(id: number, value: number): void {
     if (Number.isNaN(value)) {
       return;
     }
@@ -145,7 +141,8 @@ export class TaskDialog {
       return; 
     }
 
-    const title = editable.title.trim();
+    const title = editable.title.trim().slice(0, 100);
+    const description = editable.description.trim().slice(0, 1000);
 
     if (!title) {
       this.titleInput.nativeElement.focus();
@@ -163,10 +160,15 @@ export class TaskDialog {
       ).values()
     );
 
+    if (!editable.completedAt && editable.completed && editable.deadline) {
+      editable.completedAt = editable.date;
+    }
+
     const taskToSave = {
       ...editable, 
       title, 
-      description: editable.description.trim(),
+      description,
+      completedAt: editable.completed && editable.deadline ? editable.completedAt : undefined,
       reminderTimes: distinctReminders
     }
 
@@ -199,11 +201,6 @@ export class TaskDialog {
     this.editableTask.update(task => task? {...task ,time: undefined }: null);
   }
 
-    protected setTime(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.editableTask.update(task => task? {...task ,time: input.value || undefined } : null);
-  }
-
   protected updateTag(tagId: string | null | undefined): void {
     const selectedTagId = tagId && tagId !== 'none' ? tagId : undefined;
     this.editableTask.update(task => task ? {
@@ -215,9 +212,10 @@ export class TaskDialog {
     } : null);
   }
 
-  protected toggleDeadlinePicker(event: Event, taskId: number): void {
-    event.preventDefault();
-    event.stopPropagation();
+  editTask(): void {
+    this.action = 'edit';
+    this.originalTask = structuredClone(this.task);
+    this.editableTask.set(structuredClone(this.task));
   }
 
   hasUnsavedChanges(): boolean {
@@ -243,7 +241,7 @@ export class TaskDialog {
   }
 
   close(): void {
-    if (!this.hasUnsavedChanges()) {
+    if (this.hasUnsavedChanges()) {
       this.toastService.showError('Careful! You have unsaved changes.');
       return;
     }

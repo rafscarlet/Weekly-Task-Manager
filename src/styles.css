@@ -177,6 +177,21 @@
     background: rgb(var(--primary) / 0.5); 
   }
 
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--primary) / 0.15) transparent;
+    scrollbar-gutter: stable;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(var(--primary) / 0.25);
+  }
+
+
   input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
     outline: none;
@@ -194,6 +209,19 @@
     cursor: grab;
   }
 
+  .outline-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 2px solid rgb(var(--border));
+    background-color: rgb(var(--surface));
+    color: rgb(var(--text));
+
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  }
 
   .icon-button {
     transition: transform 150ms ease, box-shadow 150ms ease;

@@ -1,6 +1,7 @@
 import { inject, Injectable } from "@angular/core";
 import { Reminder, ValueLabels } from "../types/all-types";
 import { TasksService } from "./tasks.service";
+import { ToastService } from "./toast.service";
 import { DateService } from "./date.service";
 
 declare global {
@@ -10,6 +11,10 @@ declare global {
         title: string,
         body: string
       ): Promise<void>;
+
+       setUnreadBadge(
+        count: number
+      ): Promise<boolean>;
     };
   }
 }
@@ -26,15 +31,31 @@ export const UNIT_LABELS : ValueLabels[]= [
 @Injectable({providedIn: 'root'})
 export class NotificationService {
     private readonly tasksService = inject(TasksService);
+    private readonly toastService = inject(ToastService);
     private readonly dateService = inject(DateService);
+
+    private unreadCount = 0;
 
     private intervalId?: number;
 
     get tasks() { 
        return this.tasksService.tasks();
     }
-    
-    show(title: string, body: string): void {
+
+    private async setUnreadBadge(count: number): Promise<void> {
+        if (!window.electronNotificationAPI) {
+            console.error('electronNotificationAPI is unavailable');
+            return;
+        }
+
+        try {
+            await window.electronNotificationAPI.setUnreadBadge(count);
+        } catch (error) {
+            console.error('Failed to update unread badge:', error);
+        }
+    }
+
+    showSystemNotification(title: string, body: string): void {
         if (window.electronNotificationAPI) {
             window.electronNotificationAPI.showNotification(title, body);
         } else {
@@ -42,29 +63,24 @@ export class NotificationService {
         }
     }
 
-    start(): void { 
+    start() { 
         if (this.intervalId) {
             return;
         }
-
-        this.checkReminders();
-
-        this.intervalId = setInterval(() => {
+        const now = new Date();
+        // this.show('Weekly Task Manager', 'Notification service started.');
+        const delay = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+        setTimeout(() => {
             this.checkReminders();
-        }, CHECK_EVERY); // Check every minute
+            this.intervalId = window.setInterval(() => {
+                this.checkReminders();
+            }, CHECK_EVERY);
+        }, delay);
     }
 
     private checkReminders(): void { 
-        const currentDate = new Date();
-        const today = [
-            currentDate.getFullYear(),
-            String(currentDate.getMonth() + 1).padStart(2, '0'),
-            String(currentDate.getDate()).padStart(2, '0')
-        ].join('-');
-        const currentTime = [
-            String(currentDate.getHours()).padStart(2, '0'),
-            String(currentDate.getMinutes()).padStart(2, '0')
-        ].join(':');
+        const today = this.dateService.currentDate();
+        const currentTime = this.dateService.currentTime();
 
         this.tasks.forEach(task => {
             if (
@@ -74,7 +90,21 @@ export class NotificationService {
                 task.reminderTimes &&
                 task.formattedReminders?.includes(currentTime)
             ) {
-                this.show('Task Reminder' , `Reminder for task: ${task.title}`);
+                this.showSystemNotification(
+                    `${task.title} - @${task.time}` ,
+                    "Pssst! There's probably something to remember about this task..."
+                );
+                
+                this.unreadCount++;
+                void this.setUnreadBadge(this.unreadCount);
+
+                this.toastService.showNotification(
+                `[${currentTime}]: ${task.title} - @${task.time}`,
+                () => {
+                    this.unreadCount = Math.max(0, this.unreadCount - 1);
+                    void this.setUnreadBadge(this.unreadCount);
+                }
+                );
             } 
         });
     }

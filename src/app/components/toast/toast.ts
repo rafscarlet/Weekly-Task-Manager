@@ -9,4 +9,11 @@ import { ToastService } from '../../services/toast.service';
 })
 export class ToastComponent {
   protected readonly toastService = inject(ToastService);
+
+  icons = {
+    'success': 'check',
+    'error': 'close',
+    'notification': 'notifications',
+    'default': 'info',
+  }
 }

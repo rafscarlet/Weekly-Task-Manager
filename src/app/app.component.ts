@@ -27,13 +27,16 @@ export class AppComponent {
   readonly report_url = signal(REPORT_URL);
 
   constructor() {
-    this.notificationService.start();
   }
 
   appVersion = signal('');
   async ngOnInit() {
+    if (!window.electronAPI) {
+      throw new Error('Electron API is not available');
+    }
     const version = await window.electronAPI.getVersion();
     this.appVersion.set(version);
     this.report_url.set(`https://docs.google.com/forms/d/e/1FAIpQLSdZYM7hM0WYVtQMUQ5eDr7YO2PrpP4Ab6ykCeSMvrOhBmfsrw/viewform?usp=pp_url&entry.1350614233=${version}`);
+    this.notificationService.start();
   }
 }

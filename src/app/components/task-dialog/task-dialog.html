@@ -1,8 +1,8 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" (click)="close()">
-  <div class="w-full max-w-2xl max-h-9/10 rounded-2xl border border-border bg-surface shadow-xl p-6 overflow-auto"
+  <div class="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl pl-8 pr-4 py-4"
     (click)="$event.stopPropagation()">
-    <div class="flex items-center justify-between gap-4 border-b border-border mb-4">
 
+    <div class="flex shrink-0 items-center justify-between gap-4 border-b border-border">
       <div class="font-semibold text-xl">
         {{ action | titlecase }} Task
       </div>
@@ -16,28 +16,64 @@
       </button>
     </div>
 
+    <div class="custom-scrollbar pr-2 pt-2 min-h-0 flex-1 overflow-y-auto">
     @if (action === 'view') {
-      <div class="min-w-0  flex flex-col gap-4">
-
-        <div>
-          <p class="input-label">
-            Title
-          </p>
-          <p class="text-lg font-semibold text-text truncate">
-            {{ task.title }}
-          </p>
+      <div class="min-w-0 flex flex-col gap-6 p-4">
+        <div class="flex items-center gap-10 flex-wrap">
+          <div>
+            <p class="input-label">
+              Title
+            </p>
+            <p class="text-lg font-semibold text-text truncate">
+              {{ task.title }}
+            </p>
+          </div>
+          @if(task.time){
+          <div>
+            <p class="input-label">
+              Time
+            </p>
+            <p class="font-semibold text-on-primary bg-primary px-2 rounded-sm text-center">
+              {{ task.time }}
+            </p>
+          </div>
+          }
+          @if (task.tag) {
+          <div>
+            <p class="input-label">
+              Tag
+            </p>
+            <span class="inline-block px-3 rounded-full font-bold text-on-primary"
+              [style.background]="task.tag.color">
+              {{ task.tag.name | uppercase }}
+            </span>
+          </div>
+          }
         </div>
 
-        @if (task.tag) {
-        <div>
-          <p class="input-label">
-            Tag
-          </p>
-          <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold text-on-primary"
-            [style.background]="task.tag.color">
-            {{ task.tag.name | uppercase }}
-          </span>
-        </div>
+        @if(task.reminderEnabled && task.reminderTimes && task.reminderTimes.length > 0) {
+          <div>
+            <p class="input-label">
+              Notifications
+            </p>
+            <ul class="mt-1">
+              @for (reminder of task.reminderTimes; track reminder.id) {
+                <li class="flex items-center gap-1 text-text-secondary">
+                  <span class="mx-2 w-2 h-2 rounded-full bg-primary shrink-0"></span>
+                  <span class="text-sm text-text font-semibold">
+                    {{ reminder.value }} 
+                    {{ unitLabels.find(unit => unit.value == reminder.unit)?.label ??'' }}
+                  </span>
+                    before task time
+                  @if(task.formattedReminders) {
+                    (<span class="text-sm text-primary">
+                       @{{task.formattedReminders[reminder.id]}}
+                    </span>)
+                  }
+                </li>
+              }
+            </ul>
+          </div>
         }
 
         <div>
@@ -56,28 +92,42 @@
           <p class="input-label">
             Deadline
           </p>
-
           <div class="mt-1 flex items-center gap-2 text-danger text-sm">
-
             <span class="material-symbols-rounded">
               warning
             </span>
-
             {{ task.deadline }}
-
           </div>
         </div>
         }
-
 
         <div>
           <p class="input-label">
             Status
           </p>
-
           <p class="mt-1 text-sm font-bold" [class.text-success]="task.completed" [class.text-warning]="!task.completed">
             {{ task.completed ? 'Completed' : 'Pending' }}
+            @if(task.completed && task.completedAt) {
+              <span class="text-text-secondary font-medium"> at: {{ task.completedAt }}</span>
+            }
           </p>
+        </div>
+
+          @if (isOverdue(task, today())) {
+            <div class="text-danger uppercase font-bold text-center w-full">
+              task overdue!
+            </div>
+          }
+
+        <div class="sticky bottom-0 z-10 flex shrink-0 justify-end">
+          <button 
+              class="outline-button border-primary text-primary font-semibold hover:text-primary-hover hover:bg-primary/20"
+              (click)="editTask()">
+            <span class="material-symbols-rounded">
+              edit
+            </span>
+            Edit Task
+          </button>
         </div>
 
       </div>
@@ -94,6 +144,7 @@
               type="text" id="task-title" 
               #title 
               placeholder="e.g. Bee Hunting"
+              maxlength="100"
               class="input-text"
               [ngStyle]="!editableTask()?.title ? {'border-color': 'var(--color-danger)'} : {}"
               [value]="editableTask()?.title" 
@@ -117,7 +168,7 @@
             #time 
             step="60"
             class="input-text"
-            [value]="editableTask()?.time" 
+            [value]="editableTask()?.time ?? ''" 
             (input)="updateTaskField('time', time.value)"
             />
 
@@ -141,8 +192,8 @@
           <p class="input-label">
             Notifications
           </p>
-          <div class="border-2 border-border rounded-lg p-4">
-            <div class="flex items-center gap-2 pb-3">
+          <div class="px-2 py-2">
+            <div class="flex items-center gap-2 pb-2">
               <input
                 type="checkbox" 
                 id="reminder-enabled" 
@@ -152,7 +203,7 @@
                 [checked]="editableTask()?.reminderEnabled ?? false"
                 (change)="updateTaskField('reminderEnabled', reminderEnabled.checked)"
                 />
-                <label for="reminder-enabled" class="flex-15" [class.text-text-secondary]="!editableTask()?.time">Enable Notifications</label>
+                <label for="reminder-enabled" class="flex-15 py-2" [class.text-text-secondary]="!editableTask()?.time">Enable Notifications</label>
                 @if(!editableTask()?.time) {
                   <span class="text-xs text-primary ml-2">
                     *(You need to set a TIME to enable notifications)
@@ -161,11 +212,11 @@
 
                 @if(editableTask()?.reminderEnabled) {
                 <button type="button" title="Add reminder"
-                  class="flex items-center gap-2 border-primary border p-1.5 pr-2 rounded text-primary hover:text-primary-hover" 
+                  class="outline-button px-2 py-1 border-primary text-primary hover:text-primary-hover" 
                   aria-label="Add reminder"
                   [disabled]="!(editableTask()?.reminderEnabled)"
                   (click)="addReminder()">
-                  <span class="material-symbols-rounded" style="font-size: 15px;" aria-hidden="true">add</span>
+                  <span class="material-symbols-rounded" style="font-size: 20px;" aria-hidden="true">add</span>
                   Add reminder
                 </button>
                 }
@@ -182,17 +233,19 @@
                       class="input-text py-1 w-15 no-spinner"
                       [class.text-text-secondary]="!editableTask()?.reminderEnabled"
                       [disabled]="!(editableTask()?.reminderEnabled ?? false)"
-                      [value]="reminder.value"
-                      (input)="updateReminderValue(reminder.id, $event)"
+                      [ngModel]="reminder.value"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="updateReminderValue(reminder.id, $event)"
                       />
                     <select class="py-1" 
                       [class.text-text-secondary]="!editableTask()?.reminderEnabled" 
                       [disabled]="!editableTask()?.reminderEnabled"
-                      [value]="reminder.unit" 
-                      (change)="updateReminderValue(reminder.id, $event)"
+                      [ngModel]="reminder.unit"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="updateReminderUnit(reminder.id, $event)"
                       >
                       @for(units of unitLabels; track units) {
-                        <option [value]="units.value">
+                        <option [ngValue]="units.value">
                           {{ units.label }}
                         </option>
                       }
@@ -224,6 +277,7 @@
           </p>
           <textarea type="text" 
             #description 
+            maxlength="1000"
             placeholder="e.g. This task is about finding the bees that escaped..."
             class="input-text max-h-40 min-h-25"
             [value]="editableTask()?.description" 
@@ -275,34 +329,34 @@
             <input 
               #deadlineDate 
               type="date" 
-              [value]="editableTask()?.deadline"
+              [value]="editableTask()?.deadline ?? ''"
               (change)="setDeadline($event)"
               class="input-text rounded-lg border-2 border-border bg-surface text-text p-2 text-sm"
-              [ngClass]="isOverdue(editableTask(), today) ? 'border-danger':''"
+              [ngClass]="isOverdue(editableTask(), today()) ? 'border-danger':''"
               />
 
           </div>
-            @if (isOverdue(task, today)) {
+            @if (isOverdue(task, today())) {
               <div class="text-danger uppercase font-bold text-center w-full mt-2 ">
                 task overdue!
               </div>
             }
         </div>
 
-        <div class="flex items-center justify-end gap-2">
+        <div class="sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-2 border-t border-border bg-surface py-2">
           <button type="submit"
-            class="w-20 icon-button rounded-full border border-success bg-success py-1 text-sm font-semibold text-on-success shadow-sm hover:bg-success-hover">
+            class="w-20 justify-center outline-button border-success font-semibold text-success hover:bg-success/20">
             Save
           </button>
 
           <button type="button"
-            class="w-20 icon-button rounded-full border border-border bg-neutral py-1 text-sm font-semibold text-on-neutral shadow-sm hover:bg-neutral-hover"
+            class="outline-button font-semibold text-on-neutral hover:bg-neutral-hover"
             (click)="clearEdit()">
             Cancel
           </button>
         </div>
       </form>
     }
-
+    </div>
   </div>
 </div>

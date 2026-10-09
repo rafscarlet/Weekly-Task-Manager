@@ -6,7 +6,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
 contextBridge.exposeInMainWorld('electronNotificationAPI', {
   showNotification: (title, body) =>
-    ipcRenderer.invoke('show-notification', title, body)
+    ipcRenderer.invoke('show-notification', title, body),
+
+   setUnreadBadge: (count) =>
+    ipcRenderer.invoke('set-unread-badge', count)
 });
 
 contextBridge.exposeInMainWorld("electronTasks", {

@@ -1,13 +1,26 @@
-<div
-    class="toast-shell flex items-center gap-2"
-    [class.toast-shell-visible]="toastService.state() !== null"
-    [class.toast-shell-success]="toastService.state() === 'success'"
-    [class.toast-shell-error]="toastService.state() === 'error'"
-    role="status"
-    aria-live="polite"
-    aria-atomic="true">
-    <i class="material-symbols-rounded" aria-hidden="true">
-        {{ toastService.state() === 'success' ? 'check' : toastService.state() === 'error' ? 'close' : '' }}
-    </i>
-    <span>{{ toastService.message() }}</span>
+<div class="toast-stack">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div
+      class="toast-shell"
+      [class.toast-fading]="toast.fading"
+      [class.toast-shell-success]="toast.state === 'success'"
+      [class.toast-shell-error]="toast.state === 'error'"
+      [class.toast-shell-notification]="toast.state === 'notification'"
+    >
+        <span class="flex items-center gap-2">
+            <i class="material-symbols-rounded">{{icons[toast.state ?? 'default']}}</i>
+            {{ toast.message }}
+        </span>
+
+        @if (toast.state === 'notification') {
+            <button
+            type="button"
+            class="px-2 py-1 border-2 border-on-warning rounded-full break-keep max-h-min self-center"
+            (click)="toast.action?.(); toastService.remove(toast.id)"
+            >
+            OK
+            </button>
+        }
+    </div>
+  }
 </div>

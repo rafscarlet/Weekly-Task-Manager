@@ -23,7 +23,7 @@ export type Reminder = {
 export type Unit = 'min' | 'h' | 'w' | 'd';
 
 export type ValueLabels = { 
-  value: string | number;
+  value: Unit;
   label: string;
 }
 
@@ -55,4 +55,14 @@ export type DialogOptions ={
 
   icon?: string;
   danger?: boolean;
+}
+
+export type ToastState = 'success' | 'error' | 'notification' | null;
+
+export type ToastItem = { 
+  id: number;
+  message: string;
+  state: ToastState;
+  fading?: boolean;
+  action?: (() => void) | null;
 }

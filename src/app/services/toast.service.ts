@@ -1,28 +1,23 @@
 import { Injectable, signal } from '@angular/core';
-
-export type ToastState = 'success' | 'error' | null;
+import { ToastItem, ToastState } from '../types/all-types';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ToastService {
-  readonly message = signal('');
-  readonly state = signal<ToastState>(null);
-
-  private toastTimer: ReturnType<typeof window.setTimeout> | null = null;
+  readonly toasts = signal<ToastItem[]>([]);
+  private nextId = 0; 
 
   show(message: string, state: Exclude<ToastState, null>, durationMs: number = 1800): void {
-    if (this.toastTimer !== null) {
-      window.clearTimeout(this.toastTimer);
-    }
+    const id = this.nextId++; 
 
-    this.message.set(message);
-    this.state.set(state);
+    this.toasts.update(toasts => [
+      ...toasts, 
+      { id, message, state}
+    ]);
 
-    this.toastTimer = window.setTimeout(() => {
-      this.state.set(null);
-      this.message.set('');
-      this.toastTimer = null;
+    window.setTimeout(() => {
+      this.remove(id);
     }, durationMs);
   }
 
@@ -34,13 +29,28 @@ export class ToastService {
     this.show(message, 'error', durationMs);
   }
 
-  clear(): void {
-    if (this.toastTimer !== null) {
-      window.clearTimeout(this.toastTimer);
-      this.toastTimer = null;
-    }
+  showNotification(message: string, onOk: () => void): void {
+    const id = this.nextId++; 
 
-    this.state.set(null);
-    this.message.set('');
+    this.toasts.update(toasts => [
+      ...toasts, 
+      {id, message, state: 'notification', action: onOk}
+    ]);
+  }
+
+  remove(id: number): void {
+    this.toasts.update(toasts =>
+      toasts.map(toast =>
+        toast.id === id ? { ...toast, fading: true } : toast
+      )
+    );
+
+    window.setTimeout(() => {
+      this.toasts.update(toasts => toasts.filter(toast => toast.id !== id));
+    }, 350);
+  }
+
+  clear(): void {
+    this.toasts.set([]);
   }
 }
