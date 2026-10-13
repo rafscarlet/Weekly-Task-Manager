@@ -57,7 +57,7 @@ export type DialogOptions ={
   danger?: boolean;
 }
 
-export type ToastState = 'success' | 'error' | 'notification' | null;
+export type ToastState = 'success' | 'error' | 'notification' | 'default' | null;
 
 export type ToastItem = { 
   id: number;

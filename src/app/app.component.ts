@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ToastComponent } from './components/toast/toast';
 import { ThemeService } from './services/theme.service';
-import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
+import { ConfirmationDialog } from './components/confirmation-dialog/confirmation-dialog';
 import { NotificationService } from './services/notification.service';
 
 
@@ -13,7 +13,8 @@ const REPORT_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdZYM7hM0WYVtQMUQ5e
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterModule, ToastComponent, ConfirmationDialogComponent],
+  imports: [RouterModule, ToastComponent, ConfirmationDialog
+  ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })

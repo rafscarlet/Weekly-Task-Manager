@@ -6,6 +6,7 @@
       [class.toast-shell-success]="toast.state === 'success'"
       [class.toast-shell-error]="toast.state === 'error'"
       [class.toast-shell-notification]="toast.state === 'notification'"
+      [class.toast-shell-default]="toast.state === 'default' || !toast.state"
     >
         <span class="flex items-center gap-2">
             <i class="material-symbols-rounded">{{icons[toast.state ?? 'default']}}</i>

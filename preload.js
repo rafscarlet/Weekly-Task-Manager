@@ -23,7 +23,9 @@ contextBridge.exposeInMainWorld("electronTags", {
 });
 
 contextBridge.exposeInMainWorld("electronAssets", {
-  selectImage: () => ipcRenderer.invoke("select-image"),
+  uploadImage: () => ipcRenderer.invoke("upload-image"),
+  listImages: () => ipcRenderer.invoke("list-images"),
+  deleteImage: (filename) => ipcRenderer.invoke("delete-image", filename),
 });
 
 contextBridge.exposeInMainWorld("electronSettings", {

@@ -214,7 +214,6 @@
     align-items: center;
     gap: 0.5rem;
     border: 2px solid rgb(var(--border));
-    background-color: rgb(var(--surface));
     color: rgb(var(--text));
 
     padding: 0.5rem 1rem;

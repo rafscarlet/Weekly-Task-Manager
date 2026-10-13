@@ -83,3 +83,9 @@ npm run build
 ```
 
 ![Enjoy!](https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3aXFsYTJ2aHRiYmNucHd1YXA2MXR0bnpub2JyNnJkMzZta2xmZ3g3cyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/RJWARqtvIr6HZ1VzMW/giphy.gif)
+
+
+
+## Credits & Attributions
+
+Leaves icon made by [Magnific](https://www.magnific.com) from [FlatIcon](https://www.flaticon.com/authors/magnific)

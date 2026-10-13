@@ -178,7 +178,7 @@ function getIconsFolderPath() {
   return path.join(app.getPath("userData"), "icons");
 }
 
-ipcMain.handle("select-image", async () => {
+ipcMain.handle("upload-image", async () => {
   const result = await dialog.showOpenDialog({
     properties: ["openFile"],
     filters: [
@@ -209,6 +209,34 @@ ipcMain.handle("select-image", async () => {
   fs.copyFileSync(sourcePath, destinationPath);
 
   return filename;
+});
+
+ipcMain.handle("list-images", () => {
+  const iconsFolder = getIconsFolderPath();
+
+  if (!fs.existsSync(iconsFolder)) {
+    return [];
+  }
+
+  const files = fs.readdirSync(iconsFolder)
+    .filter((file) => {
+      const ext = path.extname(file).toLowerCase();
+      return [".png", ".jpg", ".jpeg", ".svg"].includes(ext);
+    });
+
+  return files;
+});
+
+ipcMain.handle("delete-image", (_, filename) => {
+  const iconsFolder = getIconsFolderPath();
+  const filePath = path.join(iconsFolder, filename);
+
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+    return true;
+  }
+
+  return false;
 });
 
 // Settings

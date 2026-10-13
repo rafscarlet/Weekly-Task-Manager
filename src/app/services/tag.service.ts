@@ -6,14 +6,9 @@ type ElectronTagsApi = {
   saveTags: (tags: TagCategory[]) => void;
 };
 
-type ElectronAssetsApi = {
-  selectImage: () => Promise<string | null>;
-};
-
 declare global {
   interface Window {
     electronTags?: ElectronTagsApi;
-    electronAssets?: ElectronAssetsApi;
   }
 }
 

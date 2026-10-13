@@ -6,9 +6,12 @@ import {FormsModule} from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
 import { ToastService } from '../../services/toast.service';
 import { DialogService } from '../../services/dialog.service';
+import { IconPicker } from '../icon-picker/icon-picker';
+import {IconService} from '../../services/icon.service';
+import { TagCategory } from '../../types/all-types';
 @Component({
   selector: 'app-settings-page',
-  imports: [FormsModule],
+  imports: [FormsModule, IconPicker], 
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.css',
 })
@@ -24,6 +27,10 @@ export class SettingsPage {
   localTags = signal(structuredClone(this.tagService.tags()));
   settings = this.settingsService.settings;
   localSettings = signal(structuredClone(this.settingsService.settings()));
+
+  tag = signal<TagCategory>({} as TagCategory);
+  selectedIcon: string | undefined = undefined;
+  iconPickerOpen = signal(false);
 
   constructor() {
     effect(() => {
@@ -67,8 +74,24 @@ export class SettingsPage {
     );
   }
 
+  openIconPicker(tagId: string) {
+    const tag = this.localTags().find(tag => tag.id === tagId);
+    this.tag.set(tag!);
+    this.selectedIcon = tag?.icon;
+    this.iconPickerOpen.set(true);
+  }
+
+  updateTagIcon(selection: { tagId: string; icon: string }) {
+    this.localTags.update(tags =>
+      tags.map(tag =>
+        tag.id === selection.tagId ? { ...tag, icon: selection.icon } : tag
+      )
+    );
+    this.selectedIcon = selection.icon;
+  }
+
   async selectIcon(id: string) {
-    const file = await window.electronAssets?.selectImage();
+    const file = await window.electronAssets?.uploadImage();
 
     if (!file) {
       return;

@@ -1,0 +1,83 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" (click)="close()">
+
+    <div class="flex h-[70vh] w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl pl-8 pr-4 pt-4 pb-2"
+    (click)="$event.stopPropagation()">
+
+        <div class="flex shrink-0 items-center justify-between gap-4 border-b border-border">
+            <div class="font-semibold text-xl">
+                Select an Icon for tag: 
+                <span [style]="{color: tag.color?? ''}" class="font-bold">{{tag.name}}</span>
+            </div>
+
+            <button type="button" class="icon-button rounded-full p-2 hover:bg-surface-hover flex items-center justify-center"
+                (click)="close()" title="Close">
+
+                <span class="material-symbols-rounded">
+                close
+                </span>
+            </button>
+        </div>
+        <div class="flex-1 custom-scrollbar pr-2 pt-2 min-h-0 overflow-y-auto"
+                (click)="$event.stopPropagation()">
+            <div class="flex min-h-full w-full flex-col">
+                @if (icons().length > 0) {
+                    <div class="flex flex-wrap content-start gap-3">
+                    @for (icon of icons(); track icon) {
+                        <div class="relative flex flex-col items-center gap-2 rounded-xl border-2 p-2
+                                hover:border-primary hover:bg-primary/10 cursor-pointer"
+                            [class]="icon === selectedIcon ? 'bg-primary/20 border-primary':'border-transparent'"
+                            (click)="selectIcon(icon)">
+                            <img
+                                [src]="'app-icon://' + icon"
+                                class="w-25 h-25 rounded object-cover" />
+                            <hr class="w-full bg-surface-hover">
+                            <div class="flex w-full items-center justify-between">
+                                <button
+                                    type="button"
+                                    title="Delete icon"
+                                    class="icon-button flex items-center rounded-full border-2 border-transparent p-1
+                                    text-danger hover:border-danger"
+                                    (click)="$event.stopPropagation(); deleteIcon(icon)">
+                                    <i class="material-symbols-rounded">delete</i>
+                                </button>
+                                @if(icon === selectedIcon) {
+                                    <div class="flex w-7 h-7 items-center rounded border-2 border-success bg-success/10 text-success">
+                                        <i class="material-symbols-rounded text-shadow-on-success">check</i>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    </div>
+                } @else {
+                <div class="flex flex-1 flex-col items-center justify-center gap-6 p-10 text-text-disabled">
+                    <img
+                        src="assets/wind.png"
+                        class="w-30 h-30 rounded object-cover" />
+                    <span>No icons yet... Try uploading some! =)</span>
+                </div>
+                }
+            </div>
+        </div>
+        <div class=" bottom-0 z-10 flex shrink-0 items-center justify-between gap-2 border-t border-border bg-surface py-2">
+            <button type="button"
+                class="outline-button text-on-neutral hover:bg-neutral-hover bg-neutral/50 rounded-full"
+                (click)="close()">
+                Cancel
+            </button>
+            <span class="text-text-secondary">
+                {{icons().length }} / {{maxIconCapacity}} 
+            </span>    
+            <button
+                type="button"
+                title="Delete icon"
+                class="flex items-center gap-2 border-2 rounded outline-button
+                text-primary border-primary hover:bg-primary/20 active:bg-primary/10"
+                [disabled]="icons().length >= maxIconCapacity"
+                (click)="uploadIcon()">
+                <i class="material-symbols-rounded">upload</i>
+                <span class="font-semibold">Upload</span>
+            </button>
+        </div>
+    </div>
+</div>
