@@ -33,6 +33,8 @@ let tasksCache = [];
 let tagsCache = [];
 let settingsCache = {};
 
+const checkUpdatesEvery = 4 * 60 * 60 * 1000; // every 4 hours
+
 function ensureUserDataFolder() {
   const dir = app.getPath("userData");
 
@@ -308,6 +310,14 @@ function setLaunchAtStartup(enabled) {
   });
 }
 
+function getAppIconPath() {
+  return [
+    path.join(__dirname, "src", "assets", "icon.ico"),
+    path.join(__dirname, "dist", "calendar-tasks", "assets", "icon.ico"),
+    path.join(__dirname, "dist", "calendar-tasks", "browser", "assets", "icon.ico"),
+  ].find((filePath) => fs.existsSync(filePath));
+}
+
 ipcMain.handle("settings:load", () => {
   settingsCache = readSettings();
   return settingsCache;
@@ -330,7 +340,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 700,
     show: false,
-    icon: path.join(__dirname, "src", "assets", "icon.ico"),
+    icon: getAppIconPath(),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -422,18 +432,16 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.checkForUpdates();
+
+  setInterval(() => {
+    autoUpdater.checkForUpdates();
+  }, checkUpdatesEvery); 
 }
 
 //// Tray ////
 
 function createTray() {
-  const trayIconPaths = [
-    path.join(__dirname, "assets", "icon.ico"),
-    path.join(__dirname, "src", "assets", "icon.ico"),
-    path.join(__dirname, "dist", "calendar-tasks", "browser", "assets", "icon.ico"),
-  ];
-
-  const iconPath = trayIconPaths.find((p) => fs.existsSync(p));
+  const iconPath = getAppIconPath();
 
   if(!iconPath) {
     console.error("Tray icon not found in any of the expected paths.");
@@ -487,6 +495,22 @@ protocol.registerSchemesAsPrivileged([
     },
   },
 ]);
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
 
 app.whenReady().then(() => {
   ensureUserDataFolder();
