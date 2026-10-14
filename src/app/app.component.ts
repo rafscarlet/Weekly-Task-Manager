@@ -38,6 +38,7 @@ export class AppComponent {
     const version = await window.electronAPI.getVersion();
     this.appVersion.set(version);
     this.report_url.set(`https://docs.google.com/forms/d/e/1FAIpQLSdZYM7hM0WYVtQMUQ5eDr7YO2PrpP4Ab6ykCeSMvrOhBmfsrw/viewform?usp=pp_url&entry.1350614233=${version}`);
+    await this.notificationService.checkNotificationSupport();
     this.notificationService.start();
   }
 }

@@ -5,11 +5,22 @@ contextBridge.exposeInMainWorld("electronAPI", {
 });
 
 contextBridge.exposeInMainWorld('electronNotificationAPI', {
-  showNotification: (title, body) =>
-    ipcRenderer.invoke('show-notification', title, body),
+  showNotification: (title, body, taskId) =>
+    ipcRenderer.invoke('show-notification', title, body, taskId),
+
+  isNotificationsSupported: () =>
+    ipcRenderer.invoke('notifications:supported'),
 
    setUnreadBadge: (count) =>
-    ipcRenderer.invoke('set-unread-badge', count)
+    ipcRenderer.invoke('set-unread-badge', count),
+
+   onNotificationClicked: (callback) => {
+    const listener = (_event, taskId) => callback(taskId);
+    ipcRenderer.on('notification-clicked', listener);
+    return () => {
+      ipcRenderer.removeListener('notification-clicked', listener);
+    };
+   }
 });
 
 contextBridge.exposeInMainWorld("electronTasks", {

@@ -5,7 +5,8 @@ const DEFAULT_SETTINGS: Settings = {
   showCompleted: true,
   showWeekends: false,
   showDeadlineOnCopy: false,
-  darkMode: false
+  darkMode: false,
+  launchAtStartup: false
 };
 
 type ElectronSettingsApi = {

@@ -58,6 +58,13 @@
   color: rgb(var(--on-danger));
 }
 
+.toast-shell-warning {
+  background: rgb(var(--warning) / 0.8);
+  border: 2px solid rgb(var(--warning));
+
+  color: rgb(var(--on-warning));
+}
+
 .toast-shell-default {
   background: rgb(var(--primary) / 0.8);
   border: 2px solid rgb(var(--primary));

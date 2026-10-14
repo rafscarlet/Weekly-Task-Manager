@@ -175,7 +175,11 @@
 
 
 @if (selectedTask()) {
-<app-task-dialog [task]="selectedTask()!"
-  [action]="editingTaskId() === selectedTask()!.id ? 'edit' : newTaskId() === selectedTask()!.id ? 'create' :'view'"
-  (closed)="clearTaskEditorState()"></app-task-dialog>
+  <app-task-dialog 
+    [task]="selectedTask()!"
+    [action]="editingTaskId() === selectedTask()!.id ? 'edit' : newTaskId() === selectedTask()!.id ? 'create' :'view'"
+    [notificationOpened]="dialogOpenedFromNotification()"
+    (saved)="taskSaved($event)"
+    (closed)="clearTaskEditorState()">
+  </app-task-dialog>
 }

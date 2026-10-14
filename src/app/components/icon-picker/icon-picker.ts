@@ -56,9 +56,20 @@ export class IconPicker {
   }
 
   async deleteIcon(icon: string) {
+    const usedBy = this.tagService.tags().filter(tag => tag.icon === icon);
+    const isUsed = usedBy.length > 0 || this.selectedIcon === icon;
+
+    let message = '';
+
+    if (isUsed) {
+      const tagNames = usedBy.map(tag => tag.name).join(', ');
+      this.toastService.showWarning('Careful! Icon is currently in use!');
+      message = `This icon is currently in use by the following tags: ${tagNames}. `;
+    }
+
     const confirmed = await this.dialogService.open({
-      title: 'Delete Icon',
-      message: `Are you sure you want to delete this icon?`,
+      title: 'Delete Icon' + (isUsed ? ' - Warning: Icon in Use' : ''),
+      message: `${message}Are you sure you want to delete this icon?`,
       icon: 'delete',
       confirmText: 'Delete',
       cancelText: 'Cancel',
@@ -66,12 +77,6 @@ export class IconPicker {
     });
 
     if (!confirmed) {
-      return;
-    }
-
-    const isUsed = this.tagService.tags().some(tag => tag.icon === icon);
-    if (isUsed || this.selectedIcon === icon) {
-      this.toastService.showError('Icon is currently in use by a tag and cannot be deleted.');
       return;
     }
 

@@ -13,6 +13,7 @@ export class ToastComponent {
   icons = {
     'success': 'check',
     'error': 'close',
+    'warning': 'warning',
     'notification': 'notifications',
     'default': 'info',
   }

@@ -29,6 +29,10 @@ export class ToastService {
     this.show(message, 'error', durationMs);
   }
 
+  showWarning(message: string, durationMs: number = 1800): void {
+    this.show(message, 'warning', durationMs);
+  }
+
   showNotification(message: string, onOk: () => void): void {
     const id = this.nextId++; 
 

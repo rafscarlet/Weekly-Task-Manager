@@ -75,6 +75,10 @@ ipcMain.handle("app:getVersion", () => {
   return app.getVersion();
 });
 
+ipcMain.handle("notifications:supported", () => {
+  return Notification.isSupported();
+});
+
 ipcMain.handle("tasks:load", () => {
   tasksCache = readTasks();
   return tasksCache;
@@ -82,11 +86,34 @@ ipcMain.handle("tasks:load", () => {
 
 // Notifications
 
-ipcMain.handle("show-notification", (_, title, body) => {
-  new Notification({
+ipcMain.handle("show-notification", (_, title, body, taskId) => {
+  const notification = new Notification({
     title,
     body,
-  }).show();
+  })
+
+  notification.on("click", async () => {
+    if (!mainWindow) {
+      return; 
+    }
+
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+
+    mainWindow.show();
+    mainWindow.focus();
+
+    if (process.platform ==="win32") {
+      const badgeIcon = await createBadgeIcon();
+      mainWindow.setOverlayIcon(badgeIcon, `${tasksCache.length} unread reminders`);
+    }
+
+    mainWindow.webContents.send("notification-clicked", taskId);
+
+  });
+
+  notification.show();
 });
 
 // Notification Badge
@@ -269,15 +296,29 @@ function saveSettings(settings = settingsCache) {
   );
 }
 
+function setLaunchAtStartup(enabled) {
+  if (process.platform !== "win32") {
+    return;
+  }
+
+  app.setLoginItemSettings({
+    openAtLogin: Boolean(enabled),
+    path: process.execPath,
+    args: app.isPackaged ? [] : [app.getAppPath()],
+  });
+}
+
 ipcMain.handle("settings:load", () => {
   settingsCache = readSettings();
   return settingsCache;
 });
 
 ipcMain.on("settings:save", (_event, settings) => {
-  saveSettings(
-    typeof settings === "object" && settings !== null ? settings : {},
-  );
+  const nextSettings =
+    typeof settings === "object" && settings !== null ? settings : {};
+
+  saveSettings(nextSettings);
+  setLaunchAtStartup(nextSettings.launchAtStartup);
 });
 
 // window
@@ -289,7 +330,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 700,
     show: false,
-    icon: path.join(__dirname, "assets", "icon.ico"),
+    icon: path.join(__dirname, "src", "assets", "icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -386,9 +427,20 @@ function setupAutoUpdater() {
 //// Tray ////
 
 function createTray() {
-  const iconPath = path.join(__dirname, "assets", "icon.ico");
-  tray = new Tray(iconPath);
+  const trayIconPaths = [
+    path.join(__dirname, "assets", "icon.ico"),
+    path.join(__dirname, "src", "assets", "icon.ico"),
+    path.join(__dirname, "dist", "calendar-tasks", "browser", "assets", "icon.ico"),
+  ];
 
+  const iconPath = trayIconPaths.find((p) => fs.existsSync(p));
+
+  if(!iconPath) {
+    console.error("Tray icon not found in any of the expected paths.");
+    return;
+  }
+
+  tray = new Tray(iconPath);
   tray.setToolTip("Calendar Tasks App");
 
   const contextMenu = Menu.buildFromTemplate([
@@ -438,6 +490,7 @@ protocol.registerSchemesAsPrivileged([
 
 app.whenReady().then(() => {
   ensureUserDataFolder();
+  setLaunchAtStartup(readSettings().launchAtStartup);
 
   protocol.handle("app-icon", (request) => {
     const filename = decodeURIComponent(request.url.replace("app-icon://", ""));

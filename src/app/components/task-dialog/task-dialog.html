@@ -1,5 +1,7 @@
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" (click)="close()">
-  <div class="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl pl-8 pr-4 py-4"
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+  <div 
+    class="flex w-3xl max-h-[90vh] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl pl-8 pr-4 pt-4 pb-2"
+    [class.notification-dialog-highlight]="notificationOpened"
     (click)="$event.stopPropagation()">
 
     <div class="flex shrink-0 items-center justify-between gap-4 border-b border-border">
@@ -16,10 +18,10 @@
       </button>
     </div>
 
-    <div class="custom-scrollbar pr-2 pt-2 min-h-0 flex-1 overflow-y-auto">
+    <div class="custom-scrollbar pr-2 min-h-0 flex-1 overflow-y-auto">
     @if (action === 'view') {
-      <div class="flex gap-6 min-w-0 p-4">
-        <div class="flex flex-col gap-6">
+      <div class="flex min-w-0 p-4 pb-6">
+        <div class="flex flex-col gap-6 flex-1">
           <div class="flex items-center gap-10 flex-wrap">
             <div>
               <p class="input-label">
@@ -37,17 +39,6 @@
               <p class="font-semibold text-on-primary bg-primary px-2 rounded-sm text-center">
                 {{ task.time }}
               </p>
-            </div>
-            }
-            @if (task.tag) {
-            <div>
-              <p class="input-label">
-                Tag
-              </p>
-              <span class="inline-block px-3 rounded-full font-bold text-on-primary"
-                [style.background]="task.tag.color">
-                {{ task.tag.name | uppercase }}
-              </span>
             </div>
             }
           </div>
@@ -113,18 +104,26 @@
               }
             </p>
           </div>
-
             @if (isOverdue(task, today())) {
               <div class="text-danger uppercase font-bold text-center w-full">
                 task overdue!
               </div>
             }
-
-
         </div>
-        @if (task.tag; as tag) {
+
+        <div class="flex flex-col gap-6 px-20">
+        @if (task.tag; as tag) {            
+            <div>
+              <p class="input-label">
+                Tag
+              </p>
+              <span class="inline-block px-3 rounded-full font-bold text-on-primary"
+                [style.background]="tag.color">
+                {{ tag.name | uppercase }}
+              </span>
+            </div>
           @if (tag.icon; as icon) {
-            <div class="flex flex-col">
+            <div class="">
               <p class="input-label">Icon</p>
               <div>
                 <img
@@ -133,10 +132,11 @@
                 />
               </div>
             </div>
+            }
           }
-        }
+          </div>
       </div>
-      <div class="sticky bottom-0 z-10 flex shrink-0 justify-end">
+      <div class="sticky bottom-0 border-t p-2 z-10 flex shrink-0 justify-end">
         <button 
             class="outline-button border-primary text-primary font-semibold hover:text-primary-hover hover:bg-primary/20"
             (click)="editTask()">
@@ -147,9 +147,9 @@
         </button>
       </div>
     } @else if (action=== 'edit' || action === 'create') {
-      <form #editForm (submit)="saveForm($event)" class="flex flex-col gap-4 w-full">
+      <form id="edit-form" #editForm (submit)="saveForm($event)" class="flex flex-col gap-4 w-full p-4">
 
-      <div class="flex gap-2 ">
+      <div class="flex gap-2">
         <div class="flex-1">
           <p class="input-label">
             Title
@@ -208,22 +208,43 @@
             Notifications
           </p>
           <div class="px-2 py-2">
-            <div class="flex items-center gap-2 pb-2">
+            @if (!notificationService.notificationsSupported()) {
+              <p class="mb-2 flex items-start gap-1 text-sm text-warning">
+                <span class="material-symbols-rounded" aria-hidden="true">warning</span>
+                Desktop notifications are unavailable on this system.
+              </p>
+            } 
+
+            <div class="flex items-center gap-2  pb-2">
+              <div class="flex items-center flex-1 gap-2">
               <input
                 type="checkbox" 
                 id="reminder-enabled" 
                 #reminderEnabled
                 class="round-checkbox"
-                [disabled]="!editableTask()?.time"
+                [disabled]="!editableTask()?.time || !notificationService.notificationsSupported()"
                 [checked]="editableTask()?.reminderEnabled ?? false"
                 (change)="updateTaskField('reminderEnabled', reminderEnabled.checked)"
                 />
-                <label for="reminder-enabled" class="flex-15 py-2" [class.text-text-secondary]="!editableTask()?.time">Enable Notifications</label>
-                @if(!editableTask()?.time) {
+                <label 
+                  for="reminder-enabled" 
+                  class="py-2" 
+                  [class.text-text-secondary]="!editableTask()?.time"
+                  >
+                  Enable Notifications 
+                </label>
+
+                <i class="material-symbols-rounded text-text-secondary cursor-help" 
+                  style="font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;"
+                  title="If reminders do not appear, check your system notification settings and allow Calendar Tasks to send notifications."
+                  aria-hidden="true">info</i>
+
+                @if(!editableTask()?.time && notificationService.notificationsSupported()) {
                   <span class="text-xs text-primary ml-2">
                     *(You need to set a TIME to enable notifications)
                   </span>
                 }
+              </div>
 
                 @if(editableTask()?.reminderEnabled) {
                 <button type="button" title="Add reminder"
@@ -357,9 +378,9 @@
               </div>
             }
         </div>
-
-        <div class="sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-2 border-t border-border bg-surface py-2">
-          <button type="submit"
+      </form>
+      <div class="sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-2 border-t border-border bg-surface py-2">
+          <button type="submit" form="edit-form"
             class="w-20 justify-center outline-button border-success font-semibold text-success hover:bg-success/20">
             Save
           </button>
@@ -369,8 +390,7 @@
             (click)="clearEdit()">
             Cancel
           </button>
-        </div>
-      </form>
+      </div>
     }
     </div>
   </div>

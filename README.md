@@ -3,6 +3,9 @@
 A desktop weekly planner for managing tasks, deadlines, and schedules with offline storage.
 Calendar Tasks is a simple productivity app designed to help you plan your week, organize tasks, track deadlines and well... whatever new feature comes to my mind. :P
 
+This app is made as a practice project but also as a handy tool for myself and my friends so for now it mainly adapts to our needs and is shaped as that. That's why there is a suggestion form in the app footer for any new ideas and features for the app that anyone can fill :)
+Also, the AI usage for this app's creation is minimal as one of its main purposes (as stated before) is for me to improve my development, design, organization and methodology skills. This could also mean more bugs, so the form is also useful for reporting them. 
+
 ## Features 
 
 - [x] Weekly Calendar View 

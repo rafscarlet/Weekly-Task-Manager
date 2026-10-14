@@ -15,6 +15,7 @@ import { TaskDialog } from '../task-dialog/task-dialog';
 import { Overlay, OverlayModule, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { OptionsMenu } from '../options-menu/options-menu';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-home',
@@ -29,6 +30,7 @@ export class HomeComponent {
   private tagService = inject(TagService);
   private toastService = inject(ToastService);
   private settingsService = inject(SettingsService);
+  private notificationService = inject(NotificationService);
   private router = inject(Router);
   private dialog = inject(DialogService);
   private overlay = inject(Overlay);
@@ -52,6 +54,8 @@ export class HomeComponent {
   protected readonly showWeekends = computed(() => this.settings().showWeekends);
   protected readonly showDeadlineOnCopy = computed(() => this.settings().showDeadlineOnCopy);
 
+  protected readonly dialogOpenedFromNotification = signal(false);
+
   days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   protected readonly weekDays = computed(() => this.dateService.getWeekDates(this.selectedWeekDate(), this.showWeekends()));
@@ -66,9 +70,20 @@ export class HomeComponent {
       // console.log('tasks:', this.tasks());
       // console.log('tags:', this.tags());
       // console.log('settings:', this.settings());
+
+      const clickedTaskId = this.notificationService.clickedTaskId();
+      const task = this.tasks().find(t => t.id === clickedTaskId);
+      if (task) {
+        this.selectedWeekDate.set(new Date(task.date));
+        this.dialogOpenedFromNotification.set(true);
+        setTimeout(() => {
+          this.dialogOpenedFromNotification.set(false);
+        }, 3000);
+        this.viewTask(task);
+        this.notificationService.clearClickedTask();
+      }
     });
   }
-
 
   getTasksForDay(date: string): TaskCard[] {
     const tasks = this.tasks().filter(task => 
@@ -214,6 +229,14 @@ export class HomeComponent {
 
   protected clearTaskEditorState(): void {
     this.selectedTask.set(null);
+    this.editingTaskId.set(null);
+    this.newTaskId.set(null);
+    this.dialogOpenedFromNotification.set(false);
+  }
+
+  protected taskSaved(task: TaskCard): void {
+    const updatedTask = this.tasks().find(candidate => candidate.id === task.id) ?? task;
+    this.selectedTask.set(updatedTask);
     this.editingTaskId.set(null);
     this.newTaskId.set(null);
   }

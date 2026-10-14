@@ -4,6 +4,7 @@ export type Settings = {
   showWeekends: boolean;
   showDeadlineOnCopy: boolean;
   darkMode: boolean;
+  launchAtStartup: boolean;
 }
 
 export type TagCategory = {
@@ -57,7 +58,7 @@ export type DialogOptions ={
   danger?: boolean;
 }
 
-export type ToastState = 'success' | 'error' | 'notification' | 'default' | null;
+export type ToastState = 'success' | 'error' | 'warning' | 'notification' | 'default' | null;
 
 export type ToastItem = { 
   id: number;

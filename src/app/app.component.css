@@ -32,7 +32,7 @@ footer {
     color: rgb(var(--text-disabled));
     font-size: 0.9rem;
 
-    padding: 1rem;
+    padding: 0 1rem;
     text-align: center;
     height: 2rem;
 }

@@ -66,32 +66,36 @@ export class DateService {
   }
 
   calculateReminderTime(taskDate: string, taskTime: string | undefined,  reminder: Reminder): string {
-    if (!taskTime) {
-      return ''; 
-    }
-    const taskDateTime = new Date(`${taskDate}T${taskTime}:00`); 
-    let reminderTime: Date;
+    const reminderTime = this.calculateReminderDate(taskDate, taskTime, reminder);
 
-    switch (reminder.unit) {
-      case 'min':
-        reminderTime = new Date(taskDateTime.getTime() - reminder.value * 60_000);
-        break;
-      case 'h':
-        reminderTime = new Date(taskDateTime.getTime() - reminder.value * 60 * 60_000);
-        break;
-      case 'd':
-        reminderTime = new Date(taskDateTime.getTime() - reminder.value * 24 * 60 * 60_000);
-        break;
-      case 'w':
-        reminderTime = new Date(taskDateTime.getTime() - reminder.value * 7 * 24 * 60 * 60_000);
-        break;
-      default:
-        throw new Error('Invalid reminder unit');
+    if (!reminderTime) {
+      return '';
     }
+
     const hours = reminderTime.getHours().toString().padStart(2, '0');
     const minutes = reminderTime.getMinutes().toString().padStart(2, '0');
 
     return `${hours}:${minutes}`;
+  }
 
+  calculateReminderDate(taskDate: string, taskTime: string | undefined, reminder: Reminder): Date | null {
+    if (!taskTime) {
+      return null;
+    }
+
+    const taskDateTime = new Date(`${taskDate}T${taskTime}:00`);
+
+    switch (reminder.unit) {
+      case 'min':
+        return new Date(taskDateTime.getTime() - reminder.value * 60_000);
+      case 'h':
+        return new Date(taskDateTime.getTime() - reminder.value * 60 * 60_000);
+      case 'd':
+        return new Date(taskDateTime.getTime() - reminder.value * 24 * 60 * 60_000);
+      case 'w':
+        return new Date(taskDateTime.getTime() - reminder.value * 7 * 24 * 60 * 60_000);
+      default:
+        throw new Error('Invalid reminder unit');
+    }
   }
 }

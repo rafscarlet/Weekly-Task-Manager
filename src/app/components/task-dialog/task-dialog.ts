@@ -5,7 +5,7 @@ import { TasksService } from '../../services/tasks.service';
 import { TagService } from '../../services/tag.service';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../services/toast.service';
-import { DEFAULT_REMINDER, UNIT_LABELS } from '../../services/notification.service';
+import { DEFAULT_REMINDER, NotificationService, UNIT_LABELS } from '../../services/notification.service';
 import { DateService } from '../../services/date.service';
 
 @Component({
@@ -16,7 +16,10 @@ import { DateService } from '../../services/date.service';
 export class TaskDialog {
   @Input() task!: TaskCard;
   @Input() action: 'view' | 'edit' | 'create' = 'view';
+  @Input() notificationOpened: boolean = false;
+
   @Output() closed = new EventEmitter<void>();
+  @Output() saved = new EventEmitter<TaskCard>();
 
   @ViewChild('title')
   titleInput!: ElementRef<HTMLInputElement>;
@@ -28,6 +31,7 @@ export class TaskDialog {
   private tagService: TagService = inject(TagService);
   private toastService: ToastService = inject(ToastService);
   private dateService: DateService = inject(DateService);
+  protected readonly notificationService = inject(NotificationService);
 
   protected readonly today = this.dateService.currentDate;
 
@@ -178,7 +182,9 @@ export class TaskDialog {
       this.tasksService.updateTask(this.task.id, taskToSave);
     }
 
-    this.clearEdit();
+    this.saved.emit(taskToSave);
+    this.action = 'view';
+    this.resetEditorState();
   }
 
   protected clearEdit(): void {

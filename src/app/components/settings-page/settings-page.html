@@ -37,6 +37,22 @@
                 class="round-checkbox" />
         </div>
 
+        <div class="section-field">
+            <i class="material-symbols-rounded">power_settings_new</i>
+            <label for="launchAtStartup">
+                 Run at Windows startup
+            </label>
+
+            <input #launchAtStartup type="checkbox" name="launchAtStartup"
+                [(ngModel)]="localSettings().launchAtStartup"
+                class="round-checkbox" />
+            <p class="text-xs text-warning flex gap-2 items-center"> 
+                Only on Windows OS  
+                <i class="material-symbols-rounded" style="font-size: 15px;">warning</i> 
+            </p>
+        </div>
+
+
         <!-- Tags -->
         <div class="section-header">Tag Categories</div>
         <div class="section-desc">Click on the index of the that tag you want to set as <span class="text-primary font-semibold">preselected</span> in your task form dropdown. :)
