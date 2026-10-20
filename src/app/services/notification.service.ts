@@ -19,6 +19,8 @@ declare global {
         count: number
       ): Promise<boolean>;
 
+      getNotificationCheckpoint(): Promise<string | null>;
+      setNotificationCheckpoint(lastCheckAt: string): void;
       onNotificationClicked(
         callback: (taskId: number) => void): () => void;
     };
@@ -79,20 +81,29 @@ export class NotificationService {
         }
     }
 
-    start() { 
+    async start() { 
         if (this.intervalId) {
             return;
         }
 
-        this.checkReminders();
+        const [checkpoint] = await Promise.all([
+            window.electronNotificationAPI?.getNotificationCheckpoint().catch(() => null),
+            this.tasksService.ready
+        ]);
+
+        if (checkpoint) {
+            this.lastCheckAt = new Date(checkpoint);
+        }
+        
+        this.checkReminders(true);
         this.intervalId = window.setInterval(() => {
-            this.checkReminders();
+            this.checkReminders(false);
         }, CHECK_EVERY);
     }
 
-    private checkReminders(): void { 
+    private checkReminders(isStartupReplay = false): void { 
         const now = new Date();
-        const currentTime = this.dateService.currentTime();
+        let notificationsAdded = false;
 
         this.tasks.forEach(task => {
             if (!task.completed && task.reminderEnabled && task.reminderTimes) {
@@ -107,17 +118,19 @@ export class NotificationService {
                         return;
                     }
 
-                this.showSystemNotification(
-                    `${task.title} - @${task.time}` ,
-                    "Pssst! There's probably something to remember about this task...",
-                    task.id
-                );
+                if (!isStartupReplay) {
+                    this.showSystemNotification(
+                        `${task.title} - @${task.time}` ,
+                        "Pssst! There's probably something to remember about this task...",
+                        task.id
+                    );
+                }
                 
                 this.unreadCount++;
-                void this.setUnreadBadge(this.unreadCount);
+                notificationsAdded = true;
 
                 this.toastService.showNotification(
-                `[${currentTime}]: ${task.title} - @${task.time}`,
+                `[${String(reminderTime.getHours()).padStart(2, '0')}:${String(reminderTime.getMinutes()).padStart(2, '0')}]: ${task.title} - @${task.time}`,
                 () => {
                     this.unreadCount = Math.max(0, this.unreadCount - 1);
                     void this.setUnreadBadge(this.unreadCount);
@@ -128,6 +141,11 @@ export class NotificationService {
         });
 
         this.lastCheckAt = now;
+        window.electronNotificationAPI?.setNotificationCheckpoint(now.toISOString());
+
+        if (notificationsAdded) {
+            void this.setUnreadBadge(this.unreadCount);
+        }
     }
 
     clearClickedTask(): void {

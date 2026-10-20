@@ -25,9 +25,10 @@ declare global {
 })
 export class SettingsService {
   private _settings = signal<Settings>(DEFAULT_SETTINGS);
+  readonly ready: Promise<void>;
 
   constructor() {
-    this.fetchSettings();
+    this.ready = this.fetchSettings();
   }
 
   get settings() {

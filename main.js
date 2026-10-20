@@ -43,6 +43,35 @@ function ensureUserDataFolder() {
   }
 }
 
+// Notification checkpoint (last time reminders were checked)
+function getNotificationCheckpointFilePath() {
+  return path.join(app.getPath("userData"), "notification-checkpoint.json");
+}
+
+function readNotificationCheckpoint() {
+  const filePath = getNotificationCheckpointFilePath();
+
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(fs.readFileSync(filePath, "utf8"));
+
+    return typeof payload?.lastCheckAt === "string" ? payload.lastCheckAt : null;
+  } catch (error) {
+    console.error("Failed to read notification-checkpoint.json:", error);
+    return null;
+  }
+}
+
+function saveNotificationCheckpoint(lastCheckAt) {
+  fs.writeFileSync(
+    getNotificationCheckpointFilePath(),
+    JSON.stringify({ lastCheckAt }, null, 2),
+  );
+}
+
 // Tasks
 function getTasksFilePath() {
   return path.join(app.getPath("userData"), "tasks.json");
@@ -79,6 +108,16 @@ ipcMain.handle("app:getVersion", () => {
 
 ipcMain.handle("notifications:supported", () => {
   return Notification.isSupported();
+});
+
+ipcMain.handle("notifications:get-checkpoint", () => {
+  return readNotificationCheckpoint();
+});
+
+ipcMain.on("notifications:set-checkpoint", (_event, lastCheckAt) => {
+  if (typeof lastCheckAt === "string") {
+    saveNotificationCheckpoint(lastCheckAt);
+  }
 });
 
 ipcMain.handle("tasks:load", () => {
@@ -122,8 +161,8 @@ ipcMain.handle("show-notification", (_, title, body, taskId) => {
 async function createBadgeIcon() {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg"
-      width="32" height="32" viewBox="0 0 32 32">
-      <circle cx="15" cy="18" r="10" fill="#e53935"/>
+      width="16" height="16" viewBox="0 0 16 16">
+      <circle cx="8" cy="8" r="7" fill="#e53935"/>
     </svg>
   `;
 
@@ -152,7 +191,7 @@ ipcMain.handle("set-unread-badge", async (_, count) => {
   if (tray) {
     tray.setToolTip(
       badgeCount > 0
-        ? `Calendar Tasks App - ${badgeCount} pending tasks`
+        ? `Calendar Tasks App - ${badgeCount} unread reminders`
         : "Calendar Tasks App",
     );
   }
@@ -510,22 +549,26 @@ if (!gotTheLock) {
       mainWindow.focus();
     }
   });
-}
 
-app.whenReady().then(() => {
-  ensureUserDataFolder();
-  setLaunchAtStartup(readSettings().launchAtStartup);
+  app.whenReady().then(() => {
+    ensureUserDataFolder();
+    setLaunchAtStartup(readSettings().launchAtStartup);
 
-  protocol.handle("app-icon", (request) => {
-    const filename = decodeURIComponent(request.url.replace("app-icon://", ""));
+    protocol.handle("app-icon", (request) => {
+      const filename = decodeURIComponent(request.url.replace("app-icon://", ""));
 
-    const iconPath = path.join(app.getPath("userData"), "icons", filename);
+      const iconPath = path.join(app.getPath("userData"), "icons", filename);
 
-    return require("electron").net.fetch(`file://${iconPath}`);
+      return require("electron").net.fetch(`file://${iconPath}`);
+    });
+
+    createWindow();
+    createTray();
+
+    setupAutoUpdater();
   });
 
-  createWindow();
-  createTray();
-
-  setupAutoUpdater();
-});
+  app.on("before-quit", () => {
+    isQuitting = true;
+  });
+}

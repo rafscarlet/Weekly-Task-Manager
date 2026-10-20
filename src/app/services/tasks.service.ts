@@ -25,7 +25,11 @@ export class TasksService {
   private dateService = inject(DateService);
   private readonly _tasks = signal<TaskCard[]>([]);
 
+  readonly ready: Promise<void>;
+
   constructor() {
+    this.ready = this.fetchTasks();
+    
     effect(() => {
       const tags = this.tagService.tags();
 
@@ -37,7 +41,6 @@ export class TasksService {
       );
     });
 
-    this.fetchTasks();
   }
 
   get tasks() {

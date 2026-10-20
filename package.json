@@ -30,18 +30,17 @@
     "files": [
       "dist/**/*",
       "main.js",
-      "preload.js",
-      "assets/**/*"
+      "preload.js"
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.ico"
+      "icon": "src/assets/icon.ico"
     },
     "linux": {
       "target": [
         "AppImage"
       ],
-      "icon": "assets/icon.png"
+      "icon": "src/assets/icon.png"
     }
   },
   "keywords": [],

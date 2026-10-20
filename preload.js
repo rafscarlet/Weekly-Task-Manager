@@ -14,6 +14,12 @@ contextBridge.exposeInMainWorld('electronNotificationAPI', {
    setUnreadBadge: (count) =>
     ipcRenderer.invoke('set-unread-badge', count),
 
+   getNotificationCheckpoint: () =>
+    ipcRenderer.invoke('notifications:get-checkpoint'),
+
+   setNotificationCheckpoint: (lastCheckAt) =>
+    ipcRenderer.send('notifications:set-checkpoint', lastCheckAt),
+
    onNotificationClicked: (callback) => {
     const listener = (_event, taskId) => callback(taskId);
     ipcRenderer.on('notification-clicked', listener);
